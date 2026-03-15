@@ -22,7 +22,7 @@ _RULE         = colors.HexColor("#CBD5E0")   # light rule
 
 
 def _register_fonts():
-    fd = os.path.join(os.path.dirname(__file__), "fonts")
+    fd = os.path.join(os.path.dirname(__file__), "..", "fonts")
     try:
         pdfmetrics.registerFont(TTFont("EBGaramond", os.path.join(fd, "EBGaramond-Regular.ttf")))
         return "EBGaramond"
@@ -225,7 +225,7 @@ def generate_modern_resume(resume):
     PHOTO_CX = SB_W / 2
 
     if pi and getattr(pi, "image_path", None):
-        img_path   = os.path.join(os.path.dirname(__file__), "static", "uploads", pi.image_path)
+        img_path   = os.path.join(os.path.dirname(__file__), "..", "static", "uploads", pi.image_path)
         circle_buf = _circle_photo(img_path)
         if circle_buf:
             PHOTO_CY = sb_y - PHOTO_R

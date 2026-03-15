@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, request, flash, jsonify, redirect,
 from flask_login import login_required, current_user
 from .models import *
 from . import db
-from .resume_classic import generate_classic_resume
-from .resume_modern import generate_modern_resume
+from .resumes.resume_classic import generate_classic_resume
+from .resumes.resume_modern import generate_modern_resume
 import os, io, json
 import datetime
 

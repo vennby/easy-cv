@@ -13,7 +13,7 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 # EBGaramond for body; Times-Bold / Times-Italic as built-in serif companions
 # ─────────────────────────────────────────────────────────────────────────────
 def _register_fonts():
-    font_dir = os.path.join(os.path.dirname(__file__), "fonts")
+    font_dir = os.path.join(os.path.dirname(__file__), "..", "fonts")
     try:
         pdfmetrics.registerFont(TTFont("EBGaramond", os.path.join(font_dir, "EBGaramond-Regular.ttf")))
         return "EBGaramond"
