@@ -53,7 +53,13 @@ def profile():
         elif 'skill' in request.form:
             return add_skill(request.form.get('skill'))
     
-    return render_template("profile.html", user=current_user, calculate_duration=calculate_duration)
+    skill_group_options = sorted({(skill.group or '').strip() for skill in current_user.skills if (skill.group or '').strip()})
+    return render_template(
+        "profile.html",
+        user=current_user,
+        calculate_duration=calculate_duration,
+        skill_group_options=skill_group_options
+    )
 
 @views.route('/update-personal-info', methods=['POST'])
 @login_required
@@ -419,6 +425,7 @@ def create_resume():
         flash('Resume created!', category='success')
         return redirect(url_for('views.home'))
     # GET: show selection form
+    skill_group_options = sorted({(skill.group or '').strip() for skill in current_user.skills if (skill.group or '').strip()})
     return render_template('resume_form.html',
         user=current_user,
         bios=current_user.bios,
@@ -426,7 +433,14 @@ def create_resume():
         experiences=current_user.experiences,
         projects=current_user.projects,
         skills=current_user.skills,
-        resume=None
+        skill_group_options=skill_group_options,
+        resume=None,
+        selected_bio_ids=set(),
+        selected_education_ids=set(),
+        selected_experience_ids=set(),
+        selected_project_ids=set(),
+        selected_skill_ids=set(),
+        selected_format_options=['classic']
     )
 
 # Edit a resume
@@ -439,6 +453,40 @@ def edit_resume(resume_id):
     if request.method == 'POST':
         resume.name = request.form.get('name')
         resume.format = request.form.get('format', 'classic')
+
+        for bio in current_user.bios:
+            bio_text = request.form.get(f'bio_text_{bio.id}')
+            if bio_text is not None:
+                bio.bio = bio_text.strip()
+
+        for edu in current_user.educations:
+            edu.uni = (request.form.get(f'edu_uni_{edu.id}') or edu.uni).strip()
+            edu.degree = (request.form.get(f'edu_degree_{edu.id}') or edu.degree).strip()
+            edu.location = (request.form.get(f'edu_location_{edu.id}') or edu.location).strip()
+            edu.start_year = (request.form.get(f'edu_start_{edu.id}') or edu.start_year).strip()
+            edu.end_year = (request.form.get(f'edu_end_{edu.id}') or edu.end_year).strip()
+
+        for exp in current_user.experiences:
+            exp.role = (request.form.get(f'exp_role_{exp.id}') or exp.role).strip()
+            exp.comp = (request.form.get(f'exp_comp_{exp.id}') or exp.comp).strip()
+            exp.desc = (request.form.get(f'exp_desc_{exp.id}') or exp.desc).strip()
+            start_date = (request.form.get(f'exp_start_{exp.id}') or '').strip()
+            end_date = (request.form.get(f'exp_end_{exp.id}') or '').strip()
+            if start_date:
+                exp.start_date = start_date
+            exp.ongoing = is_ongoing_experience(start_date or exp.start_date, end_date)
+            exp.end_date = None if exp.ongoing else (end_date if end_date else exp.end_date)
+
+        for proj in current_user.projects:
+            proj.proj = (request.form.get(f'proj_title_{proj.id}') or proj.proj).strip()
+            proj.tool = (request.form.get(f'proj_tool_{proj.id}') or proj.tool).strip()
+            proj.desc = (request.form.get(f'proj_desc_{proj.id}') or proj.desc).strip()
+
+        for skill in current_user.skills:
+            skill.data = (request.form.get(f'skill_data_{skill.id}') or skill.data).strip()
+            skill_group = (request.form.get(f'skill_group_{skill.id}') or '').strip()
+            skill.group = skill_group if skill_group else None
+
         bio_ids = request.form.getlist('bios')
         education_ids = request.form.getlist('educations')
         experience_ids = request.form.getlist('experiences')
@@ -452,6 +500,7 @@ def edit_resume(resume_id):
         db.session.commit()
         flash('Resume updated!', category='success')
         return redirect(url_for('views.home'))
+    skill_group_options = sorted({(skill.group or '').strip() for skill in current_user.skills if (skill.group or '').strip()})
     return render_template('resume_form.html',
         user=current_user,
         bios=current_user.bios,
@@ -459,7 +508,14 @@ def edit_resume(resume_id):
         experiences=current_user.experiences,
         projects=current_user.projects,
         skills=current_user.skills,
-        resume=resume
+        skill_group_options=skill_group_options,
+        resume=resume,
+        selected_bio_ids={item.id for item in resume.bios},
+        selected_education_ids={item.id for item in resume.educations},
+        selected_experience_ids={item.id for item in resume.experiences},
+        selected_project_ids={item.id for item in resume.projects},
+        selected_skill_ids={item.id for item in resume.skills},
+        selected_format_options=[resume.format] if resume.format else ['classic']
     )
 
 # Delete a resume

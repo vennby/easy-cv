@@ -107,8 +107,12 @@
             {% endif %}
           </div>
           <div class="profile-upload-meta">
-            <p class="profile-upload-title">Upload a clear, professional photo</p>
-            <p class="profile-upload-note">JPG, PNG, or WEBP • best as a square image</p>
+            <p class="profile-upload-title">
+              Upload a clear, professional photo
+            </p>
+            <p class="profile-upload-note">
+              JPG, PNG, or WEBP • best as a square image
+            </p>
             <input
               type="file"
               name="profile_image"
@@ -139,7 +143,7 @@
         <div class="d-flex gap-2">
           <button
             type="button"
-            class="btn btn-sm btn-outline-primary"
+            class="btn btn-sm btn-outline-primary action-btn"
             onClick="editBio('{{ bio.id }}', {{ bio.bio|tojson }})"
             aria-label="Edit"
           >
@@ -147,7 +151,7 @@
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-outline-danger"
+            class="btn btn-sm btn-outline-danger action-btn"
             onClick="deleteBio('{{ bio.id }}')"
             aria-label="Delete"
           >
@@ -175,10 +179,7 @@
     <h2 class="section-title">Education</h2>
     <ul class="list-group list-group-flush" id="education">
       {% for education in user.educations %}
-      <li
-        class="list-group-item"
-        id="education-{{ education.id }}"
-      >
+      <li class="list-group-item" id="education-{{ education.id }}">
         <div class="d-flex justify-content-between">
           <h5 class="mb-1">{{ education.uni }}</h5>
           <span class="text-muted">{{ education.location }}</span>
@@ -191,7 +192,7 @@
             >
             <button
               type="button"
-              class="btn btn-sm btn-outline-primary"
+              class="btn btn-sm btn-outline-primary action-btn"
               onClick="editEducation('{{ education.id }}', {{ education.uni|tojson }}, {{ education.location|tojson }}, {{ education.degree|tojson }}, {{ education.start_year|tojson }}, {{ education.end_year|tojson }})"
               aria-label="Edit"
             >
@@ -199,7 +200,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-sm btn-outline-danger"
+              class="btn btn-sm btn-outline-danger action-btn"
               onClick="deleteEducation('{{ education.id }}')"
               aria-label="Delete"
             >
@@ -293,7 +294,7 @@
         <div class="d-flex gap-2">
           <button
             type="button"
-            class="btn btn-sm btn-outline-primary"
+            class="btn btn-sm btn-outline-primary action-btn"
             onClick="editExperience('{{ experience.id }}', {{ experience.role|tojson }}, {{ experience.comp|tojson }}, {{ experience.desc|tojson }}, {{ experience.start_date|tojson }}, {{ (experience.end_date or '')|tojson }})"
             aria-label="Edit"
           >
@@ -301,7 +302,7 @@
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-outline-danger"
+            class="btn btn-sm btn-outline-danger action-btn"
             onClick="deleteExperience('{{ experience.id }}')"
             aria-label="Delete"
           >
@@ -387,7 +388,7 @@
           <div class="d-flex gap-2">
             <button
               type="button"
-              class="btn btn-sm btn-outline-primary"
+              class="btn btn-sm btn-outline-primary action-btn"
               onClick="editProject('{{ project.id }}', {{ project.proj|tojson }}, {{ project.tool|tojson }}, {{ project.desc|tojson }})"
               aria-label="Edit"
             >
@@ -395,7 +396,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-sm btn-outline-danger"
+              class="btn btn-sm btn-outline-danger action-btn"
               onClick="deleteProject('{{ project.id }}')"
               aria-label="Delete"
             >
@@ -463,7 +464,7 @@
             <span style="white-space: pre-wrap">{{ skill.data }}</span>
             <button
               type="button"
-              class="btn btn-sm btn-outline-primary ms-1"
+              class="btn btn-sm btn-outline-primary ms-1 action-btn"
               onClick="editSkill('{{ skill.id }}', {{ skill.data|tojson }}, {{ (skill.group or '')|tojson }})"
               aria-label="Edit"
             >
@@ -471,7 +472,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-sm btn-outline-danger ms-1"
+              class="btn btn-sm btn-outline-danger ms-1 action-btn"
               onClick="deleteSkill('{{ skill.id }}')"
               aria-label="Delete"
             >
@@ -496,14 +497,22 @@
         </div>
         <div class="col-md-4">
           <label for="group">Group</label>
-          <input
-            name="group"
-            id="group"
-            class="form-control"
-            placeholder="Group (e.g. Programming)"
-          />
+          <div class="skill-group-dropdown" data-skill-group-dropdown>
+            <input
+              name="group"
+              id="group"
+              class="form-control"
+              autocomplete="off"
+              placeholder="Group (e.g. Programming)"
+              data-skill-group-input
+            />
+            <div class="skill-group-menu" data-skill-group-menu></div>
+          </div>
         </div>
       </div>
+      <script id="skill-group-options-data" type="application/json">
+        {{ skill_group_options|tojson }}
+      </script>
       <div class="text-center mt-3">
         <button type="submit" class="btn btn-primary">Add Skill</button>
       </div>

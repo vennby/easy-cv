@@ -100,6 +100,9 @@ function refreshProfileLists() {
           currentList.innerHTML = newList.innerHTML;
         }
       });
+      if (typeof window.syncSkillGroupOptionsFromHtml === "function") {
+        window.syncSkillGroupOptionsFromHtml(doc);
+      }
     });
 }
 
@@ -223,6 +226,9 @@ function handleProfileForm(formId, listId) {
         if (newList) {
           document.getElementById(listId).innerHTML = newList.innerHTML;
         }
+        if (typeof window.syncSkillGroupOptionsFromHtml === "function") {
+          window.syncSkillGroupOptionsFromHtml(doc);
+        }
         form.reset();
       });
   });
@@ -267,4 +273,111 @@ function setupResumeSearch() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", setupResumeSearch);
+function setupSkillGroupDropdowns() {
+  const optionsDataNode = document.getElementById("skill-group-options-data");
+  if (!optionsDataNode) return;
+
+  const normalizeOptions = (values) =>
+    [...new Set((values || []).map((value) => String(value).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+  const parseOptionsNode = (node) => {
+    try {
+      return normalizeOptions(JSON.parse(node?.textContent || "[]"));
+    } catch (_error) {
+      return [];
+    }
+  };
+
+  let options = parseOptionsNode(optionsDataNode);
+
+  const setOptions = (values) => {
+    options = normalizeOptions(values);
+    optionsDataNode.textContent = JSON.stringify(options);
+  };
+
+  window.syncSkillGroupOptionsFromHtml = (doc) => {
+    const nextNode = doc.getElementById("skill-group-options-data");
+    if (!nextNode) return;
+    setOptions(parseOptionsNode(nextNode));
+  };
+
+  window.addSkillGroupOption = (groupName) => {
+    const candidate = String(groupName || "").trim();
+    if (!candidate) return;
+    if (options.includes(candidate)) return;
+    setOptions([...options, candidate]);
+  };
+
+  const dropdowns = document.querySelectorAll("[data-skill-group-dropdown]");
+  if (!dropdowns.length) return;
+
+  const closeAllMenus = () => {
+    document.querySelectorAll("[data-skill-group-menu]").forEach((menu) => {
+      menu.classList.remove("is-open");
+      menu.innerHTML = "";
+    });
+  };
+
+  const renderMenu = (menu, inputValue) => {
+    const query = (inputValue || "").trim().toLowerCase();
+    const filtered = options.filter((item) => item.toLowerCase().includes(query));
+
+    if (!filtered.length) {
+      menu.classList.remove("is-open");
+      menu.innerHTML = "";
+      return;
+    }
+
+    menu.innerHTML = filtered
+      .map(
+        (item) =>
+          `<button type="button" class="skill-group-option" data-group-value="${item.replace(/"/g, "&quot;")}">${item}</button>`
+      )
+      .join("");
+
+    menu.classList.add("is-open");
+  };
+
+  dropdowns.forEach((dropdown) => {
+    const input = dropdown.querySelector("[data-skill-group-input]");
+    const menu = dropdown.querySelector("[data-skill-group-menu]");
+    if (!input || !menu) return;
+
+    input.addEventListener("focus", () => {
+      closeAllMenus();
+      renderMenu(menu, input.value);
+    });
+
+    input.addEventListener("input", () => {
+      renderMenu(menu, input.value);
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        menu.classList.remove("is-open");
+        menu.innerHTML = "";
+      }
+    });
+
+    menu.addEventListener("mousedown", (event) => {
+      const optionButton = event.target.closest(".skill-group-option");
+      if (!optionButton) return;
+      event.preventDefault();
+      input.value = optionButton.dataset.groupValue || "";
+      menu.classList.remove("is-open");
+      menu.innerHTML = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-skill-group-dropdown]")) {
+      closeAllMenus();
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupResumeSearch();
+  setupSkillGroupDropdowns();
+});
