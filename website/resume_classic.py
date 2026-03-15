@@ -1,188 +1,296 @@
 import os
 import io
+from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
-def register_fonts():
-    font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'EBGaramond-Regular.ttf')
+# ─────────────────────────────────────────────────────────────────────────────
+# Font registration
+# EBGaramond for body; Times-Bold / Times-Italic as built-in serif companions
+# ─────────────────────────────────────────────────────────────────────────────
+def _register_fonts():
+    font_dir = os.path.join(os.path.dirname(__file__), "fonts")
     try:
-        pdfmetrics.registerFont(TTFont('EBGaramond', font_path))
-        return "EBGaramond", "EBGaramond"
-    except:
-        return "Helvetica", "Helvetica-Bold"
+        pdfmetrics.registerFont(TTFont("EBGaramond", os.path.join(font_dir, "EBGaramond-Regular.ttf")))
+        return "EBGaramond"
+    except Exception:
+        return "Times-Roman"
 
 def generate_classic_resume(resume):
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    left_margin, right_margin = 50, width - 50
-    y = height - 60
-    line_height = 18
-    section_gap = 30
-    min_y = 80
+    # ── constants ────────────────────────────────────────────────────────
+    BODY   = _register_fonts()   # EBGaramond (serif, same as current)
+    BOLD   = "Times-Bold"        # built-in serif bold — blends with EB Garamond
+    ITALIC = "Times-Italic"      # built-in serif italic
 
-    font_main, font_bold = register_fonts()
+    PAGE_W, PAGE_H = letter
+    L      = 43                  # left  margin  (points)
+    R      = PAGE_W - 43         # right margin
+    TW     = R - L               # usable text width
+    LH     = 13.5                # base leading
+    BULLET = "\u2022"
 
-    def draw_wrapped_text(text, x, y, max_width, font, font_size, bullet=None):
-        from reportlab.pdfbase.pdfmetrics import stringWidth
-        words = text.split()
-        line = ''
-        first_line = True
-        bullet_width = stringWidth('• ', font, font_size) if bullet else 0
+    buf = io.BytesIO()
+    c   = canvas.Canvas(buf, pagesize=letter)
+    y   = PAGE_H - 42
+
+    # ── helpers ──────────────────────────────────────────────────────────
+    def sw(text, font, size):
+        return stringWidth(text, font, size)
+
+    def ensure(needed):
+        nonlocal y
+        if y - needed < 52:
+            c.showPage()
+            y = PAGE_H - 50
+
+    def clean_bullet(text):
+        """Strip leading markdown-style list markers (-, *, –) users type."""
+        import re
+        return re.sub(r'^[-\*\u2013\u2022]\s*', '', text.strip())
+
+    def draw_wrapped(text, x, avail_w, font, size, bullet=None, hang=8):
+        """Wrap and draw text. bullet=BULLET to prefix first line."""
+        nonlocal y
+        text     = clean_bullet(text) if bullet else text
+        prefix   = f"{bullet}  " if bullet else ""
+        prefix_w = sw(prefix, font, size) if bullet else 0
+        words    = text.split()
+        line     = ""
+        first    = True
+
+        c.setFont(font, size)
         while words:
-            test_line = f'{line} {words[0]}'.strip()
-            if stringWidth(test_line, font, font_size) + (bullet_width if first_line else 0) < max_width:
-                line = test_line
+            trial = (line + " " + words[0]).strip()
+            slot  = avail_w - (prefix_w if first else hang)
+            if sw(trial, font, size) <= slot:
+                line = trial
                 words.pop(0)
             else:
-                if bullet and first_line:
-                    p.drawString(x, y, f'{bullet} {line}')
-                else:
-                    p.drawString(x + (bullet_width if bullet and not first_line else 0), y, line)
-                y -= line_height
-                line = ''
-                first_line = False
+                ensure(LH)
+                ox = x + (0 if first else hang)
+                c.drawString(ox, y, (prefix if first else "") + line)
+                y -= LH
+                c.setFont(font, size)
+                line, first = "", False
         if line:
-            if bullet and first_line:
-                p.drawString(x, y, f'{bullet} {line}')
-            else:
-                p.drawString(x + (bullet_width if bullet and not first_line else 0), y, line)
-            y -= line_height
-        return y
+            ensure(LH)
+            ox = x + (0 if first else hang)
+            c.drawString(ox, y, (prefix if first else "") + line)
+            y -= LH
 
-    def check_page_break(y, needed=0):
-        if y - needed < min_y:
-            p.showPage()
-            p.setFont(font_main, 12)
-            return height - 60
-        return y
+    def section_header(title):
+        nonlocal y
+        ensure(LH * 3)
+        y -= 8                           # gap above section
+        c.setFont(BOLD, 11.5)
+        c.setFillColor(colors.black)
+        c.drawString(L, y, title.upper())
+        # Full-width rule sits 1.5 pt below baseline
+        rule_y = y - 1.5
+        c.setStrokeColor(colors.black)
+        c.setLineWidth(0.6)
+        c.line(L, rule_y, R, rule_y)
+        y -= LH + 3                      # gap below header before content
 
-    def section_title(title, y):
-        y = check_page_break(y, 2 * line_height)
-        p.setFont(font_bold, 14)
-        p.setFillColor(colors.HexColor('#111111'))
-        p.drawString(left_margin, y, title.upper())
-        y -= 8
-        p.setStrokeColor(colors.HexColor('#cccccc'))
-        p.setLineWidth(1)
-        p.line(left_margin, y, right_margin, y)
-        y -= line_height
-        p.setFillColor(colors.black)
-        return y
+    def two_col(l_text, l_font, l_size, r_text, r_font, r_size):
+        nonlocal y
+        ensure(LH)
+        c.setFillColor(colors.black)
+        c.setFont(l_font, l_size)
+        c.drawString(L, y, l_text)
+        if r_text:
+            c.setFont(r_font, r_size)
+            c.drawRightString(R, y, r_text)
+        y -= LH
 
-    person_name = getattr(resume.user.personal_info, 'full_name', None) if getattr(resume.user, 'personal_info', None) else getattr(resume, 'name', '')
-    p.setFont(font_bold, 30)
-    p.setFillColor(colors.HexColor('#1a1a1a'))
-    p.drawCentredString(width / 2, y, person_name)
-    y -= line_height + 10
-    p.setStrokeColor(colors.HexColor('#bbbbbb'))
-    p.setLineWidth(1)
-    p.line(left_margin, y, right_margin, y)
-    y -= section_gap
+    def fmt_date(date_str):
+        if not date_str:
+            return ""
+        for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+            try:
+                return datetime.strptime(str(date_str), fmt).strftime("%b %Y")
+            except Exception:
+                continue
+        return str(date_str)
 
-    personal_info = getattr(resume.user, 'personal_info', None)
-    if personal_info:
-        p.setFont(font_main, 12)
-        contact_parts = []
-        contact_types = []
-        if personal_info.email:
-            contact_parts.append(personal_info.email)
-            contact_types.append('email')
-        if personal_info.phone:
-            contact_parts.append(personal_info.phone)
-            contact_types.append('phone')
-        if personal_info.linkedin:
-            contact_parts.append('LinkedIn')
-            contact_types.append('linkedin')
-        if personal_info.github:
-            contact_parts.append('GitHub')
-            contact_types.append('github')
+    # ════════════════════════════════════════════════════════════════════
+    # NAME
+    # ════════════════════════════════════════════════════════════════════
+    pi        = getattr(getattr(resume, "user", None), "personal_info", None)
+    full_name = (getattr(pi, "full_name", None) or getattr(resume, "name", ""))
 
-        contact_line = '   •   '.join(contact_parts)
-        x_start = left_margin
-        p.setFillColor(colors.black)
-        p.drawString(x_start, y, contact_line)
-        x_cursor = x_start
-        for idx, part in enumerate(contact_parts):
-            part_width = p.stringWidth(part, font_main, 12)
-            part_type = contact_types[idx]
-            if part_type == 'linkedin':
-                p.linkURL(personal_info.linkedin, (x_cursor, y-2, x_cursor+part_width, y+12))
-            elif part_type == 'github':
-                p.linkURL(personal_info.github, (x_cursor, y-2, x_cursor+part_width, y+12))
-            elif part_type == 'email':
-                p.linkURL(f"mailto:{personal_info.email}", (x_cursor, y-2, x_cursor+part_width, y+12))
-            elif part_type == 'phone':
-                p.linkURL(f"tel:{personal_info.phone}", (x_cursor, y-2, x_cursor+part_width, y+12))
-            x_cursor += part_width + p.stringWidth('   •   ', font_main, 12)
-        y -= line_height
-        y -= section_gap
+    c.setFont(BOLD, 22)
+    c.setFillColor(colors.black)
+    c.drawCentredString(PAGE_W / 2, y, full_name)
+    y -= LH + 4
 
+    # ════════════════════════════════════════════════════════════════════
+    # CONTACT LINE  — centered, pipe-separated, hyperlinked
+    # ════════════════════════════════════════════════════════════════════
+    if pi:
+        SEP  = "  |  "
+        CS   = 9.5
+        parts, types = [], []
+        if getattr(pi, "phone",    None): parts.append(pi.phone);    types.append("phone")
+        if getattr(pi, "email",    None): parts.append(pi.email);    types.append("email")
+        if getattr(pi, "linkedin", None): parts.append("LinkedIn");  types.append("linkedin")
+        if getattr(pi, "github",   None): parts.append("GitHub");    types.append("github")
+        if getattr(pi, "website",  None): parts.append(pi.website);  types.append("website")
+
+        if parts:
+            sep_w   = sw(SEP, BODY, CS)
+            total_w = sum(sw(p, BODY, CS) for p in parts) + sep_w * (len(parts) - 1)
+            cx      = (PAGE_W - total_w) / 2
+
+            c.setFont(BODY, CS)
+            c.setFillColor(colors.HexColor("#222222"))
+            for idx, part in enumerate(parts):
+                pw = sw(part, BODY, CS)
+                c.drawString(cx, y, part)
+                url_map = {
+                    "linkedin": pi.linkedin,
+                    "github":   pi.github,
+                    "website":  pi.website,
+                    "email":    f"mailto:{pi.email}",
+                    "phone":    f"tel:{pi.phone}",
+                }
+                c.linkURL(url_map[types[idx]], (cx, y - 2, cx + pw, y + CS), relative=0)
+                cx += pw
+                if idx < len(parts) - 1:
+                    c.setFillColor(colors.HexColor("#888888"))
+                    c.drawString(cx, y, SEP)
+                    c.setFillColor(colors.HexColor("#222222"))
+                    cx += sep_w
+
+        y -= LH + 2
+
+    # ════════════════════════════════════════════════════════════════════
+    # SUMMARY / BIO
+    # ════════════════════════════════════════════════════════════════════
     if resume.bios:
-        y = section_title("About", y)
-        p.setFont(font_main, 12)
+        section_header("Summary")
+        c.setFillColor(colors.black)
         for bio in resume.bios:
-            y = draw_wrapped_text(bio.bio, left_margin+10, y, right_margin-left_margin-20, font_main, 12)
-        y -= section_gap
+            draw_wrapped(bio.bio, L, TW, BODY, 10.5)
+        y -= 2
 
+    # ════════════════════════════════════════════════════════════════════
+    # EDUCATION
+    # ════════════════════════════════════════════════════════════════════
     if resume.educations:
-        y = section_title("Education", y)
+        section_header("Education")
         for edu in resume.educations:
-            y = check_page_break(y, 3 * line_height)
-            p.setFont(font_bold, 13)
-            p.drawString(left_margin, y, f"{edu.uni}, {edu.location}")
-            p.setFont(font_main, 11)
-            date_range = f"{edu.start_year or ''} - {edu.end_year or ''}".strip(' -')
-            p.drawRightString(right_margin, y, date_range)
-            y -= line_height
-            y = draw_wrapped_text(edu.degree or '', left_margin+20, y, right_margin-left_margin-40, font_main, 11)
-            y -= 6
-        y -= section_gap
+            ensure(LH * 2.5)
+            date_parts = []
+            if edu.start_year: date_parts.append(str(edu.start_year))
+            if edu.end_year:   date_parts.append(str(edu.end_year))
+            date_str = " \u2013 ".join(date_parts)
 
+            # Row 1: Bold institution + location  |  date
+            two_col(f"{edu.uni}, {edu.location}", BOLD, 11,
+                    date_str,                     BODY, 10.5)
+            # Row 2: Italic degree
+            if edu.degree:
+                c.setFont(ITALIC, 10.5)
+                c.setFillColor(colors.black)
+                c.drawString(L, y, edu.degree)
+                y -= LH
+            y -= 4                       # gap between education entries
+
+    # ════════════════════════════════════════════════════════════════════
+    # EXPERIENCE
+    # ════════════════════════════════════════════════════════════════════
     if resume.experiences:
-        y = section_title("Experience", y)
+        section_header("Experience")
         for exp in resume.experiences:
-            y = check_page_break(y, 4 * line_height)
-            p.setFont(font_bold, 12)
-            p.drawString(left_margin, y, f"{exp.role} at {exp.comp}")
-            y -= line_height
-            p.setFont(font_main, 11)
-            y = draw_wrapped_text(exp.desc or '', left_margin+20, y, right_margin-left_margin-40, font_main, 11, bullet='•')
-            y -= 6
-        y -= section_gap
+            ensure(LH * 4)
 
+            start_fmt = fmt_date(exp.start_date)
+            end_fmt   = "Present" if (exp.ongoing or not exp.end_date) else fmt_date(exp.end_date)
+            date_str  = f"{start_fmt} \u2013 {end_fmt}" if start_fmt else end_fmt
+
+            # Row 1: Bold company  |  dates
+            two_col(exp.comp, BOLD, 11, date_str, BODY, 10.5)
+            # Row 2: Italic role
+            c.setFont(ITALIC, 10.5)
+            c.setFillColor(colors.black)
+            c.drawString(L, y, exp.role)
+            y -= LH
+            # Bullets
+            if exp.desc:
+                bullets = [b.strip() for b in exp.desc.splitlines() if b.strip()] or [exp.desc.strip()]
+                c.setFillColor(colors.black)
+                for bt in bullets:
+                    draw_wrapped(bt, L + 10, TW - 14, BODY, 10.5, bullet=BULLET, hang=10)
+            y -= 4                       # gap between experience entries
+
+    # ════════════════════════════════════════════════════════════════════
+    # PROJECTS
+    # ════════════════════════════════════════════════════════════════════
     if resume.projects:
-        y = section_title("Projects", y)
+        section_header("Projects")
         for proj in resume.projects:
-            y = check_page_break(y, 4 * line_height)
-            p.setFont(font_bold, 12)
-            p.drawString(left_margin, y, f"{proj.proj}")
-            y -= line_height
-            p.setFont(font_main, 10)
-            y = draw_wrapped_text(f"Tools: {proj.tool}", left_margin+20, y, right_margin-left_margin-40, font_main, 10)
-            p.setFont(font_main, 11)
-            y = draw_wrapped_text(proj.desc or '', left_margin+20, y, right_margin-left_margin-40, font_main, 11, bullet='•')
-            y -= 6
-        y -= section_gap
+            ensure(LH * 3)
+            # Row 1: Bold project name  |  italic tools (right)
+            c.setFont(BOLD, 11)
+            c.setFillColor(colors.black)
+            c.drawString(L, y, proj.proj)
+            if proj.tool:
+                c.setFont(ITALIC, 10.5)
+                c.drawRightString(R, y, proj.tool)
+            y -= LH
+            # Bullets
+            if proj.desc:
+                bullets = [b.strip() for b in proj.desc.splitlines() if b.strip()] or [proj.desc.strip()]
+                c.setFillColor(colors.black)
+                for bt in bullets:
+                    draw_wrapped(bt, L + 10, TW - 14, BODY, 10.5, bullet=BULLET, hang=10)
+            y -= 4                       # gap between project entries
 
+    # ════════════════════════════════════════════════════════════════════
+    # TECHNICAL SKILLS
+    # ════════════════════════════════════════════════════════════════════
     if resume.skills:
-        y = section_title("Skills", y)
+        section_header("Technical Skills")
         grouped = {}
         for skill in resume.skills:
-            group = skill.group or 'Other'
-            grouped.setdefault(group, []).append(skill.data)
-        for group, skills in grouped.items():
-            p.setFont(font_bold, 12)
-            y = check_page_break(y, 2*line_height)
-            p.drawString(left_margin+10, y, group + ':')
-            y -= line_height
-            p.setFont(font_main, 12)
-            y = draw_wrapped_text(', '.join(skills), left_margin+30, y, right_margin-left_margin-40, font_main, 12)
-        y -= 6
+            g = (skill.group or "Other").strip()
+            grouped.setdefault(g, []).append(skill.data)
 
-    p.save()
-    buffer.seek(0)
-    return buffer
+        for group_name, skill_list in grouped.items():
+            ensure(LH)
+            label    = f"{group_name}: "
+            label_w  = sw(label, BOLD, 10.5)
+            items    = ", ".join(skill_list)
+            words    = items.split()
+            line     = ""
+            first    = True
+
+            c.setFont(BOLD, 10.5)
+            c.setFillColor(colors.black)
+            c.drawString(L, y, label)
+            c.setFont(BODY, 10.5)
+
+            for word in words:
+                trial    = (line + " " + word).strip()
+                avail    = (TW - label_w) if first else TW
+                if sw(trial, BODY, 10.5) <= avail:
+                    line = trial
+                else:
+                    ensure(LH)
+                    c.drawString((L + label_w) if first else L, y, line)
+                    y -= LH
+                    c.setFont(BODY, 10.5)
+                    first, line = False, word
+            if line:
+                ensure(LH)
+                c.drawString((L + label_w) if first else L, y, line)
+                y -= LH
+
+    c.save()
+    buf.seek(0)
+    return buf
