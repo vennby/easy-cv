@@ -264,7 +264,23 @@ def delete_bio():
         db.session.commit()
     return jsonify({})
 
+@views.route('/edit-bio', methods=['POST'])
+@login_required
+def edit_bio():
+    data = json.loads(request.data or '{}')
+    bio_id = data.get('bioId')
+    bio_text = (data.get('bio') or '').strip()
+    if not bio_id or not bio_text:
+        return jsonify({'error': 'Invalid bio data'}), 400
+    bio = Bios.query.get(bio_id)
+    if not bio or bio.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    bio.bio = bio_text[:160]
+    db.session.commit()
+    return jsonify({'success': True})
+
 @views.route('/delete-education', methods=['POST'])
+@login_required
 def delete_education():
     education_data = json.loads(request.data)
     education_id = education_data['educationId']
@@ -274,7 +290,24 @@ def delete_education():
         db.session.commit()
     return jsonify({})
 
+@views.route('/edit-education', methods=['POST'])
+@login_required
+def edit_education():
+    data = json.loads(request.data or '{}')
+    education_id = data.get('educationId')
+    education = Educations.query.get(education_id)
+    if not education or education.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    education.uni = (data.get('uni') or '').strip()
+    education.location = (data.get('location') or '').strip()
+    education.degree = (data.get('degree') or '').strip()
+    education.start_year = (data.get('start_year') or '').strip()
+    education.end_year = (data.get('end_year') or '').strip()
+    db.session.commit()
+    return jsonify({'success': True})
+
 @views.route('/delete-experience', methods=['POST'])
+@login_required
 def delete_experience():
     experience_data = json.loads(request.data)
     experience_id = experience_data['experienceId']
@@ -284,7 +317,33 @@ def delete_experience():
         db.session.commit()
     return jsonify({})
 
+@views.route('/edit-experience', methods=['POST'])
+@login_required
+def edit_experience():
+    data = json.loads(request.data or '{}')
+    experience_id = data.get('experienceId')
+    experience = Experiences.query.get(experience_id)
+    if not experience or experience.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+
+    role = (data.get('role') or '').strip()
+    comp = (data.get('comp') or '').strip()
+    desc = (data.get('desc') or '').strip()
+    start_date = (data.get('start_date') or '').strip()
+    end_date = (data.get('end_date') or '').strip()
+
+    ongoing = is_ongoing_experience(start_date, end_date)
+    experience.role = role
+    experience.comp = comp
+    experience.desc = desc
+    experience.start_date = start_date
+    experience.end_date = None if ongoing else end_date
+    experience.ongoing = ongoing
+    db.session.commit()
+    return jsonify({'success': True})
+
 @views.route('/delete-project', methods=['POST'])
+@login_required
 def delete_project():
     project_data = json.loads(request.data)
     project_id = project_data['projectId']
@@ -294,7 +353,22 @@ def delete_project():
         db.session.commit()
     return jsonify({})
 
+@views.route('/edit-project', methods=['POST'])
+@login_required
+def edit_project():
+    data = json.loads(request.data or '{}')
+    project_id = data.get('projectId')
+    project = Projects.query.get(project_id)
+    if not project or project.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    project.proj = (data.get('proj') or '').strip()
+    project.tool = (data.get('tool') or '').strip()
+    project.desc = (data.get('desc') or '').strip()
+    db.session.commit()
+    return jsonify({'success': True})
+
 @views.route('/delete-skill', methods=['POST'])
+@login_required
 def delete_skill():
     skill = json.loads(request.data)
     skillId = skill['skillId']
@@ -304,6 +378,23 @@ def delete_skill():
             db.session.delete(skill)
             db.session.commit()
     return jsonify({})
+
+@views.route('/edit-skill', methods=['POST'])
+@login_required
+def edit_skill():
+    data = json.loads(request.data or '{}')
+    skill_id = data.get('skillId')
+    skill = Skills.query.get(skill_id)
+    if not skill or skill.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    skill_text = (data.get('data') or '').strip()
+    skill_group = (data.get('group') or '').strip()
+    if not skill_text:
+        return jsonify({'error': 'Skill cannot be empty'}), 400
+    skill.data = skill_text[:50]
+    skill.group = skill_group[:50] if skill_group else None
+    db.session.commit()
+    return jsonify({'success': True})
 
 # Create a new resume (GET: show form, POST: save selections)
 @views.route('/resume/create', methods=['GET', 'POST'])
