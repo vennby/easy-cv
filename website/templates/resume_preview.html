@@ -1,12 +1,12 @@
 {% extends "base.html" %} {% block content %}
-<div class="container">
-  <h1 class="mb-3">{{ resume.name }}</h1>
-  <hr />
+<div class="main-card">
+  <h1 class="page-heading">{{ resume.name }}</h1>
+  <p class="page-subtitle mb-3">
+    Preview your generated resume before downloading.
+  </p>
   <iframe
     src="{{ url_for('views.preview_resume_pdf', resume_id=resume.id) }}"
-    width="100%"
-    height="800px"
-    style="border: none"
+    class="pdf-frame"
   >
   </iframe>
   <a href="{{ url_for('views.home') }}" class="btn btn-secondary mt-3"

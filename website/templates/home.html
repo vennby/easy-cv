@@ -1,88 +1,90 @@
 {% extends "base.html" %} {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div class="d-flex align-items-center">
+<div class="main-card">
+  <div class="dashboard-header">
     <div>
-      <h1 class="mb-0">easy-cv</h1>
-      <h5 class="text-muted">Quick Resume Builder</h5>
+      <h1 class="page-heading">Your Resumes</h1>
+      <p class="page-subtitle">
+        Create, edit, preview, and download polished resumes.
+      </p>
     </div>
+    <a href="{{ url_for('views.create_resume') }}" class="btn btn-primary"
+      >Create Resume</a
+    >
   </div>
-  <a href="{{ url_for('views.create_resume') }}" class="btn btn-primary"
-    >Create Resume</a
-  >
-</div>
 
-<form class="search-bar mb-4" method="get" action="{{ url_for('views.home') }}">
-  <input
-    type="text"
-    class="form-control"
-    name="search"
-    placeholder="Browse your past resumes..."
-    value="{{ search_query or '' }}"
-  />
-</form>
+  <form class="search-bar" method="get" action="{{ url_for('views.home') }}">
+    <input
+      type="text"
+      class="form-control"
+      name="search"
+      placeholder="Browse your past resumes..."
+      value="{{ search_query or '' }}"
+    />
+  </form>
 
-<div class="row">
-  {% for resume in resumes %}
-  <div class="col-md-4 mb-4">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">{{ resume.name }}</h5>
-        <ul class="list-unstyled small">
-          {% if resume.educations %}
-          <li>
-            <strong>Education:</strong> {{ resume.educations[0].uni }}{% if
-            resume.educations[0].degree %}, {{ resume.educations[0].degree }}{%
-            endif %}
-          </li>
-          {% endif %} {% if resume.experiences %}
-          <li>
-            <strong>Experience:</strong> {{ resume.experiences[0].role }} at {{
-            resume.experiences[0].comp }}
-          </li>
-          {% endif %} {% if resume.projects %}
-          <li><strong>Project:</strong> {{ resume.projects[0].proj }}</li>
-          {% endif %}
-        </ul>
-      </div>
-      <div class="card-footer d-flex justify-content-between">
-        <a
-          href="{{ url_for('views.preview_resume_pdf', resume_id=resume.id) }}"
-          class="btn btn-outline-info btn-sm"
-          >Preview</a
-        >
-        <a
-          href="{{ url_for('views.edit_resume', resume_id=resume.id) }}"
-          class="btn btn-outline-secondary btn-sm"
-          >Edit</a
-        >
-        <form
-          method="POST"
-          action="{{ url_for('views.delete_resume', resume_id=resume.id) }}"
-          style="display: inline"
-        >
-          <button
-            type="submit"
-            class="btn btn-outline-danger btn-sm"
-            onclick="return confirm('Delete this resume?');"
+  <div class="row">
+    {% for resume in resumes %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ resume.name }}</h5>
+          <ul class="list-unstyled small">
+            {% if resume.educations %}
+            <li>
+              <strong>Education:</strong> {{ resume.educations[0].uni }}{% if
+              resume.educations[0].degree %}, {{ resume.educations[0].degree
+              }}{% endif %}
+            </li>
+            {% endif %} {% if resume.experiences %}
+            <li>
+              <strong>Experience:</strong> {{ resume.experiences[0].role }} at
+              {{ resume.experiences[0].comp }}
+            </li>
+            {% endif %} {% if resume.projects %}
+            <li><strong>Project:</strong> {{ resume.projects[0].proj }}</li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+          <a
+            href="{{ url_for('views.preview_resume_pdf', resume_id=resume.id) }}"
+            class="btn btn-outline-info btn-sm"
+            >Preview</a
           >
-            Delete
-          </button>
-        </form>
-        <a
-          href="{{ url_for('views.download_specific_resume', resume_id=resume.id) }}"
-          class="btn btn-success btn-sm"
-          title="Download PDF"
-        >
-          <i class="fa-solid fa-download"></i>
-        </a>
+          <a
+            href="{{ url_for('views.edit_resume', resume_id=resume.id) }}"
+            class="btn btn-outline-secondary btn-sm"
+            >Edit</a
+          >
+          <form
+            method="POST"
+            action="{{ url_for('views.delete_resume', resume_id=resume.id) }}"
+            style="display: inline"
+          >
+            <button
+              type="submit"
+              class="btn btn-outline-danger btn-sm"
+              onclick="return confirm('Delete this resume?');"
+            >
+              Delete
+            </button>
+          </form>
+          <a
+            href="{{ url_for('views.download_specific_resume', resume_id=resume.id) }}"
+            class="btn btn-success btn-sm"
+            title="Download PDF"
+          >
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
       </div>
     </div>
+    {% else %}
+    <div class="col-12 text-center text-muted">
+      No resumes found. Click 'Create Resume' to get started!
+    </div>
+    {% endfor %}
   </div>
-  {% else %}
-  <div class="col-12 text-center text-muted">
-    No resumes found. Click 'Create Resume' to get started!
-  </div>
-  {% endfor %}
 </div>
 
 {% endblock %}

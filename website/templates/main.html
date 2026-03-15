@@ -1,19 +1,23 @@
 {% extends "base.html" %} {% block content %}
-<div
-  class="d-flex flex-column justify-content-center align-items-center text-center"
-  style="height: 80vh"
->
-  <div>
-    <h1 class="display-3 fw-bold mb-3">EasyRes</h1>
-    <h4 class="text-muted mb-4">
-      Build beautiful, tailored resumes in minutes
-    </h4>
+<section class="landing-shell">
+  <div class="landing-glow landing-glow-left"></div>
+  <div class="landing-glow landing-glow-right"></div>
 
-    <div class="d-flex gap-3 justify-content-center">
+  <div class="hero-card landing-hero">
+    <span class="landing-badge">
+      <i class="fa-solid fa-sparkles me-2"></i>Professional resumes, instantly
+    </span>
+    <h1 class="hero-title">Design a standout resume with easy-cv</h1>
+    <p class="hero-subtitle">
+      Turn your profile into a clean, recruiter-ready resume with modern
+      templates and effortless edits.
+    </p>
+
+    <div class="landing-cta d-flex gap-3 justify-content-center flex-wrap">
       <a
         href="{{ url_for('auth.sign_up') }}"
         class="btn btn-primary btn-lg px-4"
-        >Get Started</a
+        >Get Started Free</a
       >
       <a
         href="{{ url_for('auth.sign_in') }}"
@@ -21,6 +25,27 @@
         >Sign In</a
       >
     </div>
+
+    <div class="landing-points mt-4">
+      <span><i class="fa-solid fa-check"></i> ATS-friendly format</span>
+      <span><i class="fa-solid fa-check"></i> One-click PDF export</span>
+      <span><i class="fa-solid fa-check"></i> Fast profile-to-resume flow</span>
+    </div>
+
+    <div class="landing-metrics mt-4">
+      <div class="metric-card">
+        <h4>2 min</h4>
+        <p>Average setup time</p>
+      </div>
+      <div class="metric-card">
+        <h4>Clean</h4>
+        <p>Modern layouts</p>
+      </div>
+      <div class="metric-card">
+        <h4>PDF</h4>
+        <p>Ready to share</p>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 {% endblock %}

@@ -1,350 +1,513 @@
 {% extends "base.html" %} {% block content %}
-<h1 class="text-center mb-4">Personal Information</h1>
-<form method="POST" action="/update-personal-info" class="mb-4" enctype="multipart/form-data">
-  <div class="form-group">
-    <label for="full_name">Full Name</label>
-    <input
-      type="text"
-      name="full_name"
-      id="full_name"
-      class="form-control"
-      value="{{ user.personal_info.full_name if user.personal_info else '' }}"
-      required
-    />
+<div class="editor-card">
+  <div class="mb-4">
+    <h1 class="page-heading">Profile Builder</h1>
+    <p class="page-subtitle">
+      Manage your personal information and resume sections in one place.
+    </p>
   </div>
-  <div class="form-group">
-    <label for="email">Email</label>
-    <input
-      type="email"
-      name="email"
-      id="email"
-      class="form-control"
-      value="{{ user.personal_info.email if user.personal_info else '' }}"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="phone">Phone</label>
-      <input
-        type="tel"
-        name="phone"
-        id="phone"
-        class="form-control"
-        value="{{ user.personal_info.phone if user.personal_info else '' }}"
-        placeholder="Phone number"
-      />
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="address">Address</label>
-    <input
-      type="text"
-      name="address"
-      id="address"
-      class="form-control"
-      value="{{ user.personal_info.address if user.personal_info else '' }}"
-    />
-  </div>
-  <div class="form-group">
-    <label for="linkedin">LinkedIn</label>
-    <input
-      type="text"
-      name="linkedin"
-      id="linkedin"
-      class="form-control"
-      value="{{ user.personal_info.linkedin if user.personal_info else '' }}"
-    />
-  </div>
-  <div class="form-group">
-    <label for="github">GitHub</label>
-    <input
-      type="text"
-      name="github"
-      id="github"
-      class="form-control"
-      value="{{ user.personal_info.github if user.personal_info else '' }}"
-    />
-  </div>
-  <div class="form-group">
-    <label for="website">Website</label>
-    <input
-      type="text"
-      name="website"
-      id="website"
-      class="form-control"
-      value="{{ user.personal_info.website if user.personal_info else '' }}"
-    />
-  </div>
-  <div class="form-group">
-    <label for="profile_image">Profile Picture</label><br>
-    {% if user.personal_info and user.personal_info.image_path %}
-      <img src="{{ url_for('static', filename='uploads/' ~ user.personal_info.image_path) }}" alt="Profile Image" style="max-width:120px;max-height:120px;border-radius:50%;margin-bottom:10px;">
-    {% endif %}
-    <input type="file" name="profile_image" id="profile_image" class="form-control-file" accept="image/*">
-  </div>
-  <div class="text-center mt-3">
-    <button type="submit" class="btn btn-primary">Save Personal Info</button>
-  </div>
-</form>
-<h1 class="text-center mb-4">Bio</h1>
-<ul class="list-group list-group-flush" id="bio">
-  {% for bio in user.bios %}
-  <li class="list-group-item d-flex justify-content-between align-items-center" id="bio-{{ bio.id }}">
-    <span style="white-space: pre-wrap">{{ bio.bio }}</span>
-    <button
-      type="button"
-      class="btn btn-sm btn-outline-danger"
-      onClick="deleteBio('{{ bio.id }}')"
-      aria-label="Delete"
-    >
-      <i class="fa fa-times"></i>
-    </button>
-  </li>
-  {% endfor %}
-</ul>
 
-<form method="POST" class="mt-4" id="bio-form">
-  <textarea
-    name="bio"
-    id="bio"
-    class="form-control mb-3"
-    placeholder="Write your bio here..."
-  ></textarea>
-  <div class="text-center">
-    <button type="submit" class="btn btn-primary">Add Bio</button>
-  </div>
-</form>
-<h1 class="text-center mb-4">Education</h1>
-<ul class="list-group list-group-flush" id="education">
-  {% for education in user.educations %}
-  <li class="list-group-item" id="education-{{ education.id }}">
-    <div class="d-flex justify-content-between">
-      <h5 class="mb-1">{{ education.uni }}</h5>
-      <span class="text-muted">{{ education.location }}</span>
-    </div>
-    <div class="d-flex justify-content-between align-items-center">
-      <em>{{ education.degree }}</em>
-      <div class="d-flex align-items-center">
-        <span class="text-muted me-3"
-          >{{ education.start_year }} - {{ education.end_year }}</span
-        >
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-danger"
-          onClick="deleteEducation('{{ education.id }}')"
-          aria-label="Delete"
-        >
-          <i class="fa fa-times"></i>
+  <section class="editor-section panel-card">
+    <h2 class="section-title">Personal Information</h2>
+    <form
+      method="POST"
+      action="/update-personal-info"
+      enctype="multipart/form-data"
+    >
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="full_name">Full Name</label>
+          <input
+            type="text"
+            name="full_name"
+            id="full_name"
+            class="form-control"
+            value="{{ user.personal_info.full_name if user.personal_info else '' }}"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            class="form-control"
+            value="{{ user.personal_info.email if user.personal_info else '' }}"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="phone">Phone</label>
+          <input
+            type="tel"
+            name="phone"
+            id="phone"
+            class="form-control"
+            value="{{ user.personal_info.phone if user.personal_info else '' }}"
+            placeholder="Phone number"
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="address">Address</label>
+          <input
+            type="text"
+            name="address"
+            id="address"
+            class="form-control"
+            value="{{ user.personal_info.address if user.personal_info else '' }}"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="linkedin">LinkedIn</label>
+          <input
+            type="text"
+            name="linkedin"
+            id="linkedin"
+            class="form-control"
+            value="{{ user.personal_info.linkedin if user.personal_info else '' }}"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="github">GitHub</label>
+          <input
+            type="text"
+            name="github"
+            id="github"
+            class="form-control"
+            value="{{ user.personal_info.github if user.personal_info else '' }}"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="website">Website</label>
+          <input
+            type="text"
+            name="website"
+            id="website"
+            class="form-control"
+            value="{{ user.personal_info.website if user.personal_info else '' }}"
+          />
+        </div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="profile_image">Profile Picture</label>
+        <div class="profile-upload-shell">
+          <div class="profile-upload-preview-wrap">
+            {% if user.personal_info and user.personal_info.image_path %}
+            <img
+              src="{{ url_for('static', filename='uploads/' ~ user.personal_info.image_path) }}"
+              alt="Profile Image"
+              class="profile-upload-preview"
+            />
+            {% else %}
+            <div class="profile-upload-placeholder">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="profile-upload-meta">
+            <p class="profile-upload-title">Upload a clear, professional photo</p>
+            <p class="profile-upload-note">JPG, PNG, or WEBP • best as a square image</p>
+            <input
+              type="file"
+              name="profile_image"
+              id="profile_image"
+              class="form-control profile-upload-input"
+              accept="image/*"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button type="submit" class="btn btn-primary">
+          Save Personal Info
         </button>
       </div>
-    </div>
-  </li>
-  {% endfor %}
-</ul>
-<form method="POST" class="mt-4" id="education-form">
-  <div class="form-group">
-    <label for="uni">Institution Name</label>
-    <input type="text" name="uni" id="uni" class="form-control" required />
-  </div>
-  <div class="form-group">
-    <label for="location">Location</label>
-    <input
-      type="text"
-      name="location"
-      id="location"
-      class="form-control"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="degree">Degree</label>
-    <input
-      type="text"
-      name="degree"
-      id="degree"
-      class="form-control"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="start_year">Start Year</label>
-    <input
-      type="text"
-      name="start_year"
-      id="start_year"
-      class="form-control"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="end_year">End Year</label>
-    <input
-      type="text"
-      name="end_year"
-      id="end_year"
-      class="form-control"
-      required
-    />
-  </div>
-  <div class="text-center mt-3">
-    <button type="submit" class="btn btn-primary">Add Education</button>
-  </div>
-</form>
-<h1 class="text-center mb-4">Experiences</h1>
+    </form>
+  </section>
 
-<ul class="list-group list-group-flush" id="experience">
-  {% for experience in user.experiences %}
-  <li class="list-group-item d-flex justify-content-between align-items-center" id="experience-{{ experience.id }}">
-    <div>
-      <h5>{{ experience.role }} • {{ experience.comp }}</h5>
-      <p style="white-space: pre-wrap">{{ experience.desc }}</p>
-      <p><strong>Duration:</strong> {{ calculate_duration(experience.start_date, experience.end_date) }}</p>
-      <p>
-        <strong>Status:</strong> {% if experience.ongoing %}Ongoing{% else
-        %}Ended{% endif %}
-      </p>
-    </div>
-    <button
-      type="button"
-      class="btn btn-sm btn-outline-danger"
-      onClick="deleteExperience('{{ experience.id }}')"
-      aria-label="Delete"
-    >
-      <i class="fa fa-times"></i>
-    </button>
-  </li>
-  {% endfor %}
-</ul>
-
-<form method="POST" class="mt-4" id="experience-form">
-  <div class="form-group">
-    <label for="role">Role</label>
-    <input type="text" name="role" id="role" class="form-control" required />
-  </div>
-  <div class="form-group">
-    <label for="comp">Company</label>
-    <input type="text" name="comp" id="comp" class="form-control" required />
-  </div>
-  <div class="form-group">
-    <label for="desc">Description</label>
-    <textarea
-      name="desc"
-      id="desc"
-      class="form-control"
-      rows="4"
-      required
-    ></textarea>
-  </div>
-  <div class="form-group">
-    <label for="start_date">Start Date</label>
-    <input
-      type="date"
-      name="start_date"
-      id="start_date"
-      class="form-control"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="end_date">End Date <span class="text-muted">(leave blank if current job)</span></label>
-    <input type="date" name="end_date" id="end_date" class="form-control" />
-  </div>
-  <div class="text-center">
-    <button type="submit" class="btn btn-primary">Add Experience</button>
-  </div>
-</form>
-<h1 class="text-center mb-4">Projects</h1>
-<ul class="list-group list-group-flush" id="project">
-  {% for project in user.projects %}
-  <li class="list-group-item" id="project-{{ project.id }}">
-    <div class="d-flex justify-content-between">
-      <h5 class="mb-1">{{ project.proj }}</h5>
-      <span class="text-muted">{{ project.tool }}</span>
-    </div>
-    <div class="d-flex justify-content-between align-items-center">
-      <p class="mb-1" style="white-space: pre-wrap">{{ project.desc }}</p>
-      <button
-        type="button"
-        class="btn btn-sm btn-outline-danger"
-        onClick="deleteProject('{{ project.id }}')"
-        aria-label="Delete"
+  <section class="editor-section panel-card">
+    <h2 class="section-title">Bio</h2>
+    <ul class="list-group list-group-flush" id="bio">
+      {% for bio in user.bios %}
+      <li
+        class="list-group-item d-flex justify-content-between align-items-center"
+        id="bio-{{ bio.id }}"
       >
-        <i class="fa fa-times"></i>
-      </button>
-    </div>
-  </li>
-  {% endfor %}
-</ul>
+        <span style="white-space: pre-wrap">{{ bio.bio }}</span>
+        <div class="d-flex gap-2">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            onClick="editBio('{{ bio.id }}', {{ bio.bio|tojson }})"
+            aria-label="Edit"
+          >
+            <i class="fa fa-pen"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            onClick="deleteBio('{{ bio.id }}')"
+            aria-label="Delete"
+          >
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
 
-<form method="POST" class="mt-4" id="project-form">
-  <input type="hidden" name="form_type" value="project" />
-  <div class="form-group">
-    <label for="proj">Project Title</label>
-    <input type="text" name="proj" id="proj" class="form-control" required />
-  </div>
-  <div class="form-group">
-    <label for="tool">Tool/Tech Used</label>
-    <input type="text" name="tool" id="tool" class="form-control" required />
-  </div>
-  <div class="form-group">
-    <label for="desc">Description</label>
-    <textarea
-      name="desc"
-      id="desc"
-      class="form-control"
-      rows="3"
-      required
-    ></textarea>
-  </div>
-  <div class="text-center mt-3">
-    <button type="submit" class="btn btn-primary">Add Project</button>
-  </div>
-</form>
-<h1 class="text-center mb-4">Skills</h1>
-<ul class="list-group list-group-flush" id="skill">
-  {% set grouped_skills = {} %}
-  {% for skill in user.skills %}
-    {% set group = skill.group or 'Other' %}
-    {% if group not in grouped_skills %}
-      {% set _ = grouped_skills.update({group: []}) %}
-    {% endif %}
-    {% set _ = grouped_skills[group].append(skill) %}
-  {% endfor %}
-  {% for group, skills in grouped_skills.items() %}
-    <li class="list-group-item">
-      <strong>{{ group }}</strong>
-      <ul class="list-inline mt-2 mb-1">
-        {% for skill in skills %}
+    <form method="POST" class="mt-4" id="bio-form">
+      <textarea
+        name="bio"
+        id="bio_input"
+        class="form-control mb-3"
+        placeholder="Write your bio here..."
+      ></textarea>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary">Add Bio</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="editor-section panel-card">
+    <h2 class="section-title">Education</h2>
+    <ul class="list-group list-group-flush" id="education">
+      {% for education in user.educations %}
+      <li
+        class="list-group-item"
+        id="education-{{ education.id }}"
+      >
+        <div class="d-flex justify-content-between">
+          <h5 class="mb-1">{{ education.uni }}</h5>
+          <span class="text-muted">{{ education.location }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <em>{{ education.degree }}</em>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted me-3"
+              >{{ education.start_year }} - {{ education.end_year }}</span
+            >
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary"
+              onClick="editEducation('{{ education.id }}', {{ education.uni|tojson }}, {{ education.location|tojson }}, {{ education.degree|tojson }}, {{ education.start_year|tojson }}, {{ education.end_year|tojson }})"
+              aria-label="Edit"
+            >
+              <i class="fa fa-pen"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              onClick="deleteEducation('{{ education.id }}')"
+              aria-label="Delete"
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <form method="POST" class="mt-4" id="education-form">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="uni">Institution Name</label>
+          <input
+            type="text"
+            name="uni"
+            id="uni"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="location">Location</label>
+          <input
+            type="text"
+            name="location"
+            id="location"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="degree">Degree</label>
+          <input
+            type="text"
+            name="degree"
+            id="degree"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-3">
+          <label for="start_year">Start Year</label>
+          <input
+            type="text"
+            name="start_year"
+            id="start_year"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-3">
+          <label for="end_year">End Year</label>
+          <input
+            type="text"
+            name="end_year"
+            id="end_year"
+            class="form-control"
+            required
+          />
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button type="submit" class="btn btn-primary">Add Education</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="editor-section panel-card">
+    <h2 class="section-title">Experiences</h2>
+    <ul class="list-group list-group-flush" id="experience">
+      {% for experience in user.experiences %}
+      <li
+        class="list-group-item d-flex justify-content-between align-items-center"
+        id="experience-{{ experience.id }}"
+      >
+        <div>
+          <h5>{{ experience.role }} • {{ experience.comp }}</h5>
+          <p style="white-space: pre-wrap">{{ experience.desc }}</p>
+          <p>
+            <strong>Duration:</strong> {{
+            calculate_duration(experience.start_date, experience.end_date) }}
+          </p>
+          <p>
+            <strong>Status:</strong> {% if experience.ongoing %}Ongoing{% else
+            %}Ended{% endif %}
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            onClick="editExperience('{{ experience.id }}', {{ experience.role|tojson }}, {{ experience.comp|tojson }}, {{ experience.desc|tojson }}, {{ experience.start_date|tojson }}, {{ (experience.end_date or '')|tojson }})"
+            aria-label="Edit"
+          >
+            <i class="fa fa-pen"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            onClick="deleteExperience('{{ experience.id }}')"
+            aria-label="Delete"
+          >
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <form method="POST" class="mt-4" id="experience-form">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="role">Role</label>
+          <input
+            type="text"
+            name="role"
+            id="role"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="comp">Company</label>
+          <input
+            type="text"
+            name="comp"
+            id="comp"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-12">
+          <label for="exp_desc">Description</label>
+          <textarea
+            name="desc"
+            id="exp_desc"
+            class="form-control"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+        <div class="col-md-6">
+          <label for="start_date">Start Date</label>
+          <input
+            type="date"
+            name="start_date"
+            id="start_date"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="end_date"
+            >End Date
+            <span class="text-muted">(leave blank if current job)</span></label
+          >
+          <input
+            type="date"
+            name="end_date"
+            id="end_date"
+            class="form-control"
+          />
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button type="submit" class="btn btn-primary">Add Experience</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="editor-section panel-card">
+    <h2 class="section-title">Projects</h2>
+    <ul class="list-group list-group-flush" id="project">
+      {% for project in user.projects %}
+      <li class="list-group-item" id="project-{{ project.id }}">
+        <div class="d-flex justify-content-between">
+          <h5 class="mb-1">{{ project.proj }}</h5>
+          <span class="text-muted">{{ project.tool }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <p class="mb-1" style="white-space: pre-wrap">{{ project.desc }}</p>
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary"
+              onClick="editProject('{{ project.id }}', {{ project.proj|tojson }}, {{ project.tool|tojson }}, {{ project.desc|tojson }})"
+              aria-label="Edit"
+            >
+              <i class="fa fa-pen"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              onClick="deleteProject('{{ project.id }}')"
+              aria-label="Delete"
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <form method="POST" class="mt-4" id="project-form">
+      <input type="hidden" name="form_type" value="project" />
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="proj">Project Title</label>
+          <input
+            type="text"
+            name="proj"
+            id="proj"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="tool">Tool/Tech Used</label>
+          <input
+            type="text"
+            name="tool"
+            id="tool"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-12">
+          <label for="proj_desc">Description</label>
+          <textarea
+            name="desc"
+            id="proj_desc"
+            class="form-control"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button type="submit" class="btn btn-primary">Add Project</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="editor-section panel-card mb-0">
+    <h2 class="section-title">Skills</h2>
+    <ul class="list-group list-group-flush" id="skill">
+      {% set grouped_skills = {} %} {% for skill in user.skills %} {% set group
+      = skill.group or 'Other' %} {% if group not in grouped_skills %} {% set _
+      = grouped_skills.update({group: []}) %} {% endif %} {% set _ =
+      grouped_skills[group].append(skill) %} {% endfor %} {% for group, skills
+      in grouped_skills.items() %}
+      <li class="list-group-item">
+        <strong>{{ group }}</strong>
+        <ul class="list-inline mt-2 mb-1">
+          {% for skill in skills %}
           <li class="list-inline-item" id="skill-{{ skill.id }}">
             <span style="white-space: pre-wrap">{{ skill.data }}</span>
-            <button type="button" class="btn btn-sm btn-outline-danger ms-1" onClick="deleteSkill('{{ skill.id }}')" aria-label="Delete"><i class="fa fa-times"></i></button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary ms-1"
+              onClick="editSkill('{{ skill.id }}', {{ skill.data|tojson }}, {{ (skill.group or '')|tojson }})"
+              aria-label="Edit"
+            >
+              <i class="fa fa-pen"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger ms-1"
+              onClick="deleteSkill('{{ skill.id }}')"
+              aria-label="Delete"
+            >
+              <i class="fa fa-times"></i>
+            </button>
           </li>
-        {% endfor %}
-      </ul>
-    </li>
-  {% endfor %}
-</ul>
-<form method="POST" class="mt-4" id="skill-form">
-  <div class="row g-2">
-    <div class="col-md-8">
-      <input
-        name="skill"
-        id="skill"
-        class="form-control mb-2"
-        placeholder="Skill name (e.g. Python)"
-      />
-    </div>
-    <div class="col-md-4">
-      <input
-        name="group"
-        id="group"
-        class="form-control mb-2"
-        placeholder="Group (e.g. Programming)"
-      />
-    </div>
-  </div>
-  <div class="text-center">
-    <button type="submit" class="btn btn-primary">Add Skill</button>
-  </div>
-</form>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+    <form method="POST" class="mt-4" id="skill-form">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label for="skill_input">Skill</label>
+          <input
+            name="skill"
+            id="skill_input"
+            class="form-control"
+            placeholder="Skill name (e.g. Python)"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="group">Group</label>
+          <input
+            name="group"
+            id="group"
+            class="form-control"
+            placeholder="Group (e.g. Programming)"
+          />
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button type="submit" class="btn btn-primary">Add Skill</button>
+      </div>
+    </form>
+  </section>
+</div>
 {% endblock %}

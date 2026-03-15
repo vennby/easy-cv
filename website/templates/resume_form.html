@@ -1,164 +1,192 @@
 {% extends "base.html" %} {% block content %}
-<h1 class="mb-4">{{ 'Edit' if resume else 'Create' }} Resume</h1>
-<form method="POST">
-  <div class="mb-3">
-    <label for="name" class="form-label">Resume Name</label>
-    <input
-      type="text"
-      class="form-control"
-      id="name"
-      name="name"
-      required
-      value="{{ resume.name if resume else '' }}"
-    />
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Select Bio(s)</label>
-    {% for bio in bios %}
-    <div class="form-check">
+<div class="editor-card">
+  <h1 class="page-heading mb-4">{{ 'Edit' if resume else 'Create' }} Resume</h1>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="name" class="form-label">Resume Name</label>
       <input
-        class="form-check-input"
-        type="checkbox"
-        name="bios"
-        value="{{ bio.id }}"
-        id="bio{{ bio.id }}"
-        {%
-        if
-        resume
-        and
-        bio
-        in
-        resume.bios
-        %}checked{%
-        endif
-        %}
+        type="text"
+        class="form-control"
+        id="name"
+        name="name"
+        required
+        value="{{ resume.name if resume else '' }}"
       />
-      <label class="form-check-label" for="bio{{ bio.id }}"
-        >{{ bio.bio }}</label
-      >
     </div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Select Education(s)</label>
-    {% for edu in educations %}
-    <div class="form-check">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        name="educations"
-        value="{{ edu.id }}"
-        id="edu{{ edu.id }}"
-        {%
-        if
-        resume
-        and
-        edu
-        in
-        resume.educations
-        %}checked{%
-        endif
-        %}
-      />
-      <label class="form-check-label" for="edu{{ edu.id }}"
-        >{{ edu.uni }} ({{ edu.degree }})</label
-      >
+    <div class="mb-3">
+      <label class="form-label">Select Bio(s)</label>
+      {% for bio in bios %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="bios"
+          value="{{ bio.id }}"
+          id="bio{{ bio.id }}"
+          {%
+          if
+          resume
+          and
+          bio
+          in
+          resume.bios
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="bio{{ bio.id }}"
+          >{{ bio.bio }}</label
+        >
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Select Experience(s)</label>
-    {% for exp in experiences %}
-    <div class="form-check">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        name="experiences"
-        value="{{ exp.id }}"
-        id="exp{{ exp.id }}"
-        {%
-        if
-        resume
-        and
-        exp
-        in
-        resume.experiences
-        %}checked{%
-        endif
-        %}
-      />
-      <label class="form-check-label" for="exp{{ exp.id }}"
-        >{{ exp.role }} at {{ exp.comp }}</label
-      >
+    <div class="mb-3">
+      <label class="form-label">Select Education(s)</label>
+      {% for edu in educations %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="educations"
+          value="{{ edu.id }}"
+          id="edu{{ edu.id }}"
+          {%
+          if
+          resume
+          and
+          edu
+          in
+          resume.educations
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="edu{{ edu.id }}"
+          >{{ edu.uni }} ({{ edu.degree }})</label
+        >
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Select Project(s)</label>
-    {% for proj in projects %}
-    <div class="form-check">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        name="projects"
-        value="{{ proj.id }}"
-        id="proj{{ proj.id }}"
-        {%
-        if
-        resume
-        and
-        proj
-        in
-        resume.projects
-        %}checked{%
-        endif
-        %}
-      />
-      <label class="form-check-label" for="proj{{ proj.id }}"
-        >{{ proj.proj }}</label
-      >
+    <div class="mb-3">
+      <label class="form-label">Select Experience(s)</label>
+      {% for exp in experiences %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="experiences"
+          value="{{ exp.id }}"
+          id="exp{{ exp.id }}"
+          {%
+          if
+          resume
+          and
+          exp
+          in
+          resume.experiences
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="exp{{ exp.id }}"
+          >{{ exp.role }} at {{ exp.comp }}</label
+        >
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Select Skill(s)</label>
-    {% for skill in skills %}
-    <div class="form-check">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        name="skills"
-        value="{{ skill.id }}"
-        id="skill{{ skill.id }}"
-        {%
-        if
-        resume
-        and
-        skill
-        in
-        resume.skills
-        %}checked{%
-        endif
-        %}
-      />
-      <label class="form-check-label" for="skill{{ skill.id }}"
-        >{{ skill.data }}</label
-      >
+    <div class="mb-3">
+      <label class="form-label">Select Project(s)</label>
+      {% for proj in projects %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="projects"
+          value="{{ proj.id }}"
+          id="proj{{ proj.id }}"
+          {%
+          if
+          resume
+          and
+          proj
+          in
+          resume.projects
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="proj{{ proj.id }}"
+          >{{ proj.proj }}</label
+        >
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    <label for="format" class="form-label">Resume Format</label>
-    <select class="form-select" id="format" name="format" required>
-      <option value="classic" {% if resume and resume.format == 'classic' %}selected{% endif %}>Classic</option>
-      <option value="modern" {% if resume and resume.format == 'modern' %}selected{% endif %}>Modern</option>
-    </select>
-  </div>
-  <button type="submit" class="btn btn-success">
-    {{ 'Update' if resume else 'Create' }} Resume
-  </button>
-  <a href="{{ url_for('views.home') }}" class="btn btn-secondary ms-2"
-    >Cancel</a
-  >
-</form>
+    <div class="mb-3">
+      <label class="form-label">Select Skill(s)</label>
+      {% for skill in skills %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="skills"
+          value="{{ skill.id }}"
+          id="skill{{ skill.id }}"
+          {%
+          if
+          resume
+          and
+          skill
+          in
+          resume.skills
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="skill{{ skill.id }}"
+          >{{ skill.data }}</label
+        >
+      </div>
+      {% endfor %}
+    </div>
+    <div class="mb-3">
+      <label for="format" class="form-label">Resume Format</label>
+      <select class="form-select" id="format" name="format" required>
+        <option
+          value="classic"
+          {%
+          if
+          resume
+          and
+          resume.format=""
+          ="classic"
+          %}selected{%
+          endif
+          %}
+        >
+          Classic
+        </option>
+        <option
+          value="modern"
+          {%
+          if
+          resume
+          and
+          resume.format=""
+          ="modern"
+          %}selected{%
+          endif
+          %}
+        >
+          Modern
+        </option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-success">
+      {{ 'Update' if resume else 'Create' }} Resume
+    </button>
+    <a href="{{ url_for('views.home') }}" class="btn btn-secondary ms-2"
+      >Cancel</a
+    >
+  </form>
+</div>
 {% endblock %}

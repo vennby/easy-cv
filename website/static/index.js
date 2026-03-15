@@ -74,6 +74,135 @@ function deleteSkill(skillId) {
   });
 }
 
+function sendEditRequest(url, payload) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error("Failed to update");
+    }
+    return res.json();
+  });
+}
+
+function refreshProfileLists() {
+  fetch(window.location.pathname)
+    .then((res) => res.text())
+    .then((html) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      ["bio", "education", "experience", "project", "skill"].forEach((id) => {
+        const currentList = document.getElementById(id);
+        const newList = doc.getElementById(id);
+        if (currentList && newList) {
+          currentList.innerHTML = newList.innerHTML;
+        }
+      });
+    });
+}
+
+function editBio(bioId, currentBio) {
+  const updatedBio = prompt("Edit bio:", currentBio || "");
+  if (updatedBio === null) return;
+  if (!updatedBio.trim()) return;
+  sendEditRequest("/edit-bio", { bioId: bioId, bio: updatedBio.trim() }).then(
+    refreshProfileLists
+  );
+}
+
+function editEducation(
+  educationId,
+  currentUni,
+  currentLocation,
+  currentDegree,
+  currentStartYear,
+  currentEndYear
+) {
+  const uni = prompt("Institution name:", currentUni || "");
+  if (uni === null) return;
+  const location = prompt("Location:", currentLocation || "");
+  if (location === null) return;
+  const degree = prompt("Degree:", currentDegree || "");
+  if (degree === null) return;
+  const startYear = prompt("Start year:", currentStartYear || "");
+  if (startYear === null) return;
+  const endYear = prompt("End year:", currentEndYear || "");
+  if (endYear === null) return;
+
+  sendEditRequest("/edit-education", {
+    educationId: educationId,
+    uni: uni.trim(),
+    location: location.trim(),
+    degree: degree.trim(),
+    start_year: startYear.trim(),
+    end_year: endYear.trim(),
+  }).then(refreshProfileLists);
+}
+
+function editExperience(
+  experienceId,
+  currentRole,
+  currentCompany,
+  currentDescription,
+  currentStartDate,
+  currentEndDate
+) {
+  const role = prompt("Role:", currentRole || "");
+  if (role === null) return;
+  const comp = prompt("Company:", currentCompany || "");
+  if (comp === null) return;
+  const desc = prompt("Description:", currentDescription || "");
+  if (desc === null) return;
+  const startDate = prompt("Start date (YYYY-MM-DD):", currentStartDate || "");
+  if (startDate === null) return;
+  const endDate = prompt(
+    "End date (YYYY-MM-DD, leave blank if ongoing):",
+    currentEndDate || ""
+  );
+  if (endDate === null) return;
+
+  sendEditRequest("/edit-experience", {
+    experienceId: experienceId,
+    role: role.trim(),
+    comp: comp.trim(),
+    desc: desc.trim(),
+    start_date: startDate.trim(),
+    end_date: endDate.trim(),
+  }).then(refreshProfileLists);
+}
+
+function editProject(projectId, currentProj, currentTool, currentDesc) {
+  const proj = prompt("Project title:", currentProj || "");
+  if (proj === null) return;
+  const tool = prompt("Tool/Tech used:", currentTool || "");
+  if (tool === null) return;
+  const desc = prompt("Description:", currentDesc || "");
+  if (desc === null) return;
+
+  sendEditRequest("/edit-project", {
+    projectId: projectId,
+    proj: proj.trim(),
+    tool: tool.trim(),
+    desc: desc.trim(),
+  }).then(refreshProfileLists);
+}
+
+function editSkill(skillId, currentSkill, currentGroup) {
+  const data = prompt("Skill name:", currentSkill || "");
+  if (data === null) return;
+  if (!data.trim()) return;
+  const group = prompt("Skill group:", currentGroup || "");
+  if (group === null) return;
+
+  sendEditRequest("/edit-skill", {
+    skillId: skillId,
+    data: data.trim(),
+    group: group.trim(),
+  }).then(refreshProfileLists);
+}
+
 // Generic AJAX form handler
 function handleProfileForm(formId, listId) {
   const form = document.getElementById(formId);
