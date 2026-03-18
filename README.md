@@ -20,6 +20,10 @@
   So I just built it myself. Yup, instead of just making some 3 different resumes meant for different roles, I just <em>had</em> to build an application that did it for me.
 </p>
 
+### Here's what it looks like!
+
+<img src="assets/home.png">
+
 ### How to run it?
 
 1. Clone the repo, download it, do whatever you'd like to set it up in your code editor.
