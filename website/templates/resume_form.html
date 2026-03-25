@@ -1,183 +1,193 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="editor-card">
-  <h1 class="page-heading mb-4">{{ 'Edit' if resume else 'Create' }} Resume</h1>
-  <form method="POST">
-    <div class="mb-3">
-      <label for="name" class="form-label">Resume Name</label>
-      <input
-        type="text"
-        class="form-control"
-        id="name"
-        name="name"
-        required
-        value="{{ resume.name if resume else '' }}"
-      />
-    </div>
+  <h1 class="page-heading mb-2">{{ 'Edit' if resume else 'Create' }} Resume</h1>
+  <p class="page-subtitle mb-4">Pick the sections you want first, then edit only those details.</p>
 
-    <div class="mb-3">
-      <label class="form-label">Select Bio(s)</label>
-      {% for bio in bios %}
-      <div class="border rounded-3 p-2 mb-2">
-        <div class="form-check mb-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="bios"
-            value="{{ bio.id }}"
-            id="bio{{ bio.id }}"
-            {% if bio.id in selected_bio_ids %}checked{% endif %}
-          />
-          <label class="form-check-label" for="bio{{ bio.id }}">Use this bio</label>
-        </div>
-        <textarea class="form-control" name="bio_text_{{ bio.id }}" rows="2">{{ bio.bio }}</textarea>
+  <form method="POST" data-resume-builder>
+    <div class="resume-meta-grid mb-3">
+      <div>
+        <label for="name" class="form-label">Resume Name</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          required
+          value="{{ resume.name if resume else '' }}"
+        />
       </div>
-      {% endfor %}
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Select Education(s)</label>
-      {% for edu in educations %}
-      <div class="border rounded-3 p-2 mb-2">
-        <div class="form-check mb-2">
+      <div>
+        <label for="format" class="form-label">Resume Format</label>
+        <div class="skill-group-dropdown" data-format-dropdown>
           <input
-            class="form-check-input"
-            type="checkbox"
-            name="educations"
-            value="{{ edu.id }}"
-            id="edu{{ edu.id }}"
-            {% if edu.id in selected_education_ids %}checked{% endif %}
+            id="format_display"
+            class="form-control"
+            autocomplete="off"
+            readonly
+            data-format-input
+            value="{{ 'Modern' if 'modern' in selected_format_options else 'Classic' }}"
           />
-          <label class="form-check-label" for="edu{{ edu.id }}">Use this education</label>
-        </div>
-        <div class="row g-2">
-          <div class="col-md-6">
-            <input class="form-control" name="edu_uni_{{ edu.id }}" value="{{ edu.uni }}" placeholder="Institution" />
-          </div>
-          <div class="col-md-6">
-            <input class="form-control" name="edu_degree_{{ edu.id }}" value="{{ edu.degree }}" placeholder="Degree" />
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" name="edu_location_{{ edu.id }}" value="{{ edu.location }}" placeholder="Location" />
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" name="edu_start_{{ edu.id }}" value="{{ edu.start_year }}" placeholder="Start Year" />
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" name="edu_end_{{ edu.id }}" value="{{ edu.end_year }}" placeholder="End Year" />
-          </div>
+          <span class="dropdown-indicator" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+          <select class="d-none" id="format" name="format" required data-format-select>
+            <option value="classic" {% if 'classic' in selected_format_options %}selected{% endif %}>Classic</option>
+            <option value="modern" {% if 'modern' in selected_format_options %}selected{% endif %}>Modern</option>
+          </select>
+          <div class="skill-group-menu" data-format-menu></div>
         </div>
       </div>
-      {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Select Experience(s)</label>
-      {% for exp in experiences %}
-      <div class="border rounded-3 p-2 mb-2">
-        <div class="form-check mb-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="experiences"
-            value="{{ exp.id }}"
-            id="exp{{ exp.id }}"
-            {% if exp.id in selected_experience_ids %}checked{% endif %}
-          />
-          <label class="form-check-label" for="exp{{ exp.id }}">Use this experience</label>
+    <section class="resume-pick-section" data-resume-section>
+      <button type="button" class="section-toggle" data-resume-section-toggle>
+        <h2 class="section-title mb-0">Bio <span class="resume-count-pill">{{ bios|length }}</span></h2>
+        <span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+      </button>
+      <div class="section-body is-collapsed" data-resume-section-body>
+        <div class="resume-section-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-select-all="bios">Select all</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-clear-all="bios">Clear</button>
+          <span class="resume-selection-note"><span data-selected-count="bios">0</span> selected</span>
         </div>
-        <div class="row g-2">
-          <div class="col-md-6">
-            <input class="form-control" name="exp_role_{{ exp.id }}" value="{{ exp.role }}" placeholder="Role" />
+        {% for bio in bios %}
+        <div class="resume-option-card" data-option-card>
+          <div class="form-check resume-option-head">
+            <input class="form-check-input" type="checkbox" name="bios" value="{{ bio.id }}" id="bio{{ bio.id }}" data-option-toggle {% if bio.id in selected_bio_ids %}checked{% endif %} />
+            <label class="form-check-label" for="bio{{ bio.id }}">{{ (bio.bio[:90] ~ ('...' if bio.bio|length > 90 else '')) if bio.bio else 'Untitled bio' }}</label>
           </div>
-          <div class="col-md-6">
-            <input class="form-control" name="exp_comp_{{ exp.id }}" value="{{ exp.comp }}" placeholder="Company" />
-          </div>
-          <div class="col-12">
-            <textarea class="form-control" name="exp_desc_{{ exp.id }}" rows="2" placeholder="Description">{{ exp.desc }}</textarea>
-          </div>
-          <div class="col-md-6">
-            <input class="form-control" type="date" name="exp_start_{{ exp.id }}" value="{{ exp.start_date }}" />
-          </div>
-          <div class="col-md-6">
-            <input class="form-control" type="date" name="exp_end_{{ exp.id }}" value="{{ exp.end_date or '' }}" />
+          <div class="resume-option-fields" data-option-fields>
+            <textarea class="form-control" name="bio_text_{{ bio.id }}" rows="2">{{ bio.bio }}</textarea>
           </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
+    </section>
 
-    <div class="mb-3">
-      <label class="form-label">Select Project(s)</label>
-      {% for proj in projects %}
-      <div class="border rounded-3 p-2 mb-2">
-        <div class="form-check mb-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="projects"
-            value="{{ proj.id }}"
-            id="proj{{ proj.id }}"
-            {% if proj.id in selected_project_ids %}checked{% endif %}
-          />
-          <label class="form-check-label" for="proj{{ proj.id }}">Use this project</label>
+    <section class="resume-pick-section" data-resume-section>
+      <button type="button" class="section-toggle" data-resume-section-toggle>
+        <h2 class="section-title mb-0">Education <span class="resume-count-pill">{{ educations|length }}</span></h2>
+        <span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+      </button>
+      <div class="section-body is-collapsed" data-resume-section-body>
+        <div class="resume-section-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-select-all="educations">Select all</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-clear-all="educations">Clear</button>
+          <span class="resume-selection-note"><span data-selected-count="educations">0</span> selected</span>
         </div>
-        <div class="row g-2">
-          <div class="col-md-6">
-            <input class="form-control" name="proj_title_{{ proj.id }}" value="{{ proj.proj }}" placeholder="Project Title" />
+        {% for edu in educations %}
+        <div class="resume-option-card" data-option-card>
+          <div class="form-check resume-option-head">
+            <input class="form-check-input" type="checkbox" name="educations" value="{{ edu.id }}" id="edu{{ edu.id }}" data-option-toggle {% if edu.id in selected_education_ids %}checked{% endif %} />
+            <label class="form-check-label" for="edu{{ edu.id }}">{{ edu.uni }}{% if edu.degree %} • {{ edu.degree }}{% endif %}</label>
           </div>
-          <div class="col-md-6">
-            <input class="form-control" name="proj_tool_{{ proj.id }}" value="{{ proj.tool }}" placeholder="Tool/Tech" />
-          </div>
-          <div class="col-12">
-            <input class="form-control" type="url" name="proj_link_{{ proj.id }}" value="{{ proj.link or '' }}" placeholder="Project Link (optional)" />
-          </div>
-          <div class="col-12">
-            <textarea class="form-control" name="proj_desc_{{ proj.id }}" rows="2" placeholder="Description">{{ proj.desc }}</textarea>
+          <div class="resume-option-fields" data-option-fields>
+            <div class="row g-2">
+              <div class="col-md-6"><input class="form-control" name="edu_uni_{{ edu.id }}" value="{{ edu.uni }}" placeholder="Institution" /></div>
+              <div class="col-md-6"><input class="form-control" name="edu_degree_{{ edu.id }}" value="{{ edu.degree }}" placeholder="Degree" /></div>
+              <div class="col-md-4"><input class="form-control" name="edu_location_{{ edu.id }}" value="{{ edu.location }}" placeholder="Location" /></div>
+              <div class="col-md-4"><input class="form-control" name="edu_start_{{ edu.id }}" value="{{ edu.start_year }}" placeholder="Start Year" /></div>
+              <div class="col-md-4"><input class="form-control" name="edu_end_{{ edu.id }}" value="{{ edu.end_year }}" placeholder="End Year" /></div>
+            </div>
           </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
+    </section>
 
-    <div class="mb-3">
-      <label class="form-label">Select Skill Group(s)</label>
-      {% for group_name, group_skills in skills_by_group.items() %}
-      <div class="border rounded-3 p-3 mb-2">
-        <div class="form-check mb-3">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="skill_groups"
-            value="{{ group_name }}"
-            id="skillgroup{{ loop.index }}"
-            {% if group_name in selected_skill_groups %}checked{% endif %}
-          />
-          <label class="form-check-label fw-semibold" for="skillgroup{{ loop.index }}">{{ group_name }}</label>
+    <section class="resume-pick-section" data-resume-section>
+      <button type="button" class="section-toggle" data-resume-section-toggle>
+        <h2 class="section-title mb-0">Experience <span class="resume-count-pill">{{ experiences|length }}</span></h2>
+        <span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+      </button>
+      <div class="section-body is-collapsed" data-resume-section-body>
+        <div class="resume-section-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-select-all="experiences">Select all</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-clear-all="experiences">Clear</button>
+          <span class="resume-selection-note"><span data-selected-count="experiences">0</span> selected</span>
         </div>
-        <div class="ms-3">
-          <div class="d-flex flex-wrap gap-2">
-            {% for skill in group_skills %}
-            <span class="badge bg-light text-dark border">{{ skill.data }}</span>
-            {% endfor %}
+        {% for exp in experiences %}
+        <div class="resume-option-card" data-option-card>
+          <div class="form-check resume-option-head">
+            <input class="form-check-input" type="checkbox" name="experiences" value="{{ exp.id }}" id="exp{{ exp.id }}" data-option-toggle {% if exp.id in selected_experience_ids %}checked{% endif %} />
+            <label class="form-check-label" for="exp{{ exp.id }}">{{ exp.role }} • {{ exp.comp }}</label>
+          </div>
+          <div class="resume-option-fields" data-option-fields>
+            <div class="row g-2">
+              <div class="col-md-6"><input class="form-control" name="exp_role_{{ exp.id }}" value="{{ exp.role }}" placeholder="Role" /></div>
+              <div class="col-md-6"><input class="form-control" name="exp_comp_{{ exp.id }}" value="{{ exp.comp }}" placeholder="Company" /></div>
+              <div class="col-12"><textarea class="form-control" name="exp_desc_{{ exp.id }}" rows="2" placeholder="Description">{{ exp.desc }}</textarea></div>
+              <div class="col-md-6"><input class="form-control" type="date" name="exp_start_{{ exp.id }}" value="{{ exp.start_date }}" /></div>
+              <div class="col-md-6"><input class="form-control" type="date" name="exp_end_{{ exp.id }}" value="{{ exp.end_date or '' }}" /></div>
+            </div>
           </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
+    </section>
 
-    <div class="mb-3">
-      <label for="format" class="form-label">Resume Format</label>
-      <select class="form-select" id="format" name="format" required>
-        <option value="classic" {% if 'classic' in selected_format_options %}selected{% endif %}>Classic</option>
-        <option value="modern" {% if 'modern' in selected_format_options %}selected{% endif %}>Modern</option>
-      </select>
-    </div>
+    <section class="resume-pick-section" data-resume-section>
+      <button type="button" class="section-toggle" data-resume-section-toggle>
+        <h2 class="section-title mb-0">Projects <span class="resume-count-pill">{{ projects|length }}</span></h2>
+        <span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+      </button>
+      <div class="section-body is-collapsed" data-resume-section-body>
+        <div class="resume-section-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-select-all="projects">Select all</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-clear-all="projects">Clear</button>
+          <span class="resume-selection-note"><span data-selected-count="projects">0</span> selected</span>
+        </div>
+        {% for proj in projects %}
+        <div class="resume-option-card" data-option-card>
+          <div class="form-check resume-option-head">
+            <input class="form-check-input" type="checkbox" name="projects" value="{{ proj.id }}" id="proj{{ proj.id }}" data-option-toggle {% if proj.id in selected_project_ids %}checked{% endif %} />
+            <label class="form-check-label" for="proj{{ proj.id }}">{{ proj.proj }}{% if proj.tool %} • {{ proj.tool }}{% endif %}</label>
+          </div>
+          <div class="resume-option-fields" data-option-fields>
+            <div class="row g-2">
+              <div class="col-md-6"><input class="form-control" name="proj_title_{{ proj.id }}" value="{{ proj.proj }}" placeholder="Project Title" /></div>
+              <div class="col-md-6"><input class="form-control" name="proj_tool_{{ proj.id }}" value="{{ proj.tool }}" placeholder="Tool/Tech" /></div>
+              <div class="col-12"><input class="form-control" type="url" name="proj_link_{{ proj.id }}" value="{{ proj.link or '' }}" placeholder="Project Link (optional)" /></div>
+              <div class="col-12"><textarea class="form-control" name="proj_desc_{{ proj.id }}" rows="2" placeholder="Description">{{ proj.desc }}</textarea></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
 
-    <button type="submit" class="btn btn-success">
-      {{ 'Update' if resume else 'Create' }} Resume
-    </button>
-    <a href="{{ url_for('views.home') }}" class="btn btn-secondary ms-2">Cancel</a>
+    <section class="resume-pick-section" data-resume-section>
+      <button type="button" class="section-toggle" data-resume-section-toggle>
+        <h2 class="section-title mb-0">Skill Groups <span class="resume-count-pill">{{ skills_by_group|length }}</span></h2>
+        <span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+      </button>
+      <div class="section-body is-collapsed" data-resume-section-body>
+        <div class="resume-section-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-select-all="skill_groups">Select all</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-clear-all="skill_groups">Clear</button>
+          <span class="resume-selection-note"><span data-selected-count="skill_groups">0</span> selected</span>
+        </div>
+        {% for group_name, group_skills in skills_by_group.items() %}
+        <div class="resume-option-card" data-option-card>
+          <div class="form-check resume-option-head">
+            <input class="form-check-input" type="checkbox" name="skill_groups" value="{{ group_name }}" id="skillgroup{{ loop.index }}" data-option-toggle {% if group_name in selected_skill_groups %}checked{% endif %} />
+            <label class="form-check-label fw-semibold" for="skillgroup{{ loop.index }}">{{ group_name }}</label>
+          </div>
+          <div class="resume-option-fields" data-option-fields>
+            <div class="d-flex flex-wrap gap-2">
+              {% for skill in group_skills %}
+              <span class="badge bg-light text-dark border">{{ skill.data }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="mt-4">
+      <button type="submit" class="btn btn-success">{{ 'Update' if resume else 'Create' }} Resume</button>
+      <a href="{{ url_for('views.home') }}" class="btn btn-secondary ms-2">Cancel</a>
+    </div>
   </form>
 </div>
 {% endblock %}

@@ -464,6 +464,136 @@ function setupInlineEditButtons() {
   });
 }
 
+function setupResumeBuilder() {
+  const form = document.querySelector("form[data-resume-builder]");
+  if (!form) return;
+
+  const sections = form.querySelectorAll("[data-resume-section]");
+
+  const updateSectionCount = (name) => {
+    const count = form.querySelectorAll(`input[name=\"${name}\"]:checked`).length;
+    const target = form.querySelector(`[data-selected-count=\"${name}\"]`);
+    if (target) target.textContent = String(count);
+  };
+
+  const syncCard = (card) => {
+    const toggle = card.querySelector("[data-option-toggle]");
+    const fields = card.querySelector("[data-option-fields]");
+    if (!toggle || !fields) return;
+    const checked = toggle.checked;
+    card.classList.toggle("is-unselected", !checked);
+    fields.querySelectorAll("input, textarea, select").forEach((field) => {
+      field.disabled = !checked;
+    });
+  };
+
+  sections.forEach((section) => {
+    const toggleBtn = section.querySelector("[data-resume-section-toggle]");
+    const body = section.querySelector("[data-resume-section-body]");
+    if (toggleBtn && body) {
+      toggleBtn.addEventListener("click", () => {
+        body.classList.toggle("is-collapsed");
+        const expanded = !body.classList.contains("is-collapsed");
+        toggleBtn.setAttribute("aria-expanded", String(expanded));
+      });
+    }
+
+    section.querySelectorAll("[data-option-card]").forEach((card) => {
+      syncCard(card);
+      const checkbox = card.querySelector("[data-option-toggle]");
+      checkbox?.addEventListener("change", () => {
+        syncCard(card);
+        if (checkbox.name) updateSectionCount(checkbox.name);
+      });
+    });
+  });
+
+  form.querySelectorAll("[data-select-all]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const name = button.getAttribute("data-select-all");
+      if (!name) return;
+      form.querySelectorAll(`input[name=\"${name}\"]`).forEach((checkbox) => {
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      updateSectionCount(name);
+    });
+  });
+
+  form.querySelectorAll("[data-clear-all]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const name = button.getAttribute("data-clear-all");
+      if (!name) return;
+      form.querySelectorAll(`input[name=\"${name}\"]`).forEach((checkbox) => {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      updateSectionCount(name);
+    });
+  });
+
+  ["bios", "educations", "experiences", "projects", "skill_groups"].forEach(updateSectionCount);
+}
+
+function setupResumeFormatDropdown() {
+  const dropdown = document.querySelector("[data-format-dropdown]");
+  if (!dropdown) return;
+
+  const input = dropdown.querySelector("[data-format-input]");
+  const menu = dropdown.querySelector("[data-format-menu]");
+  const select = dropdown.querySelector("[data-format-select]");
+  if (!input || !menu || !select) return;
+
+  const options = Array.from(select.options).map((option) => ({
+    value: option.value,
+    label: option.text,
+  }));
+
+  const selectedOption = options.find((option) => option.value === select.value);
+  input.value = selectedOption ? selectedOption.label : options[0]?.label || "";
+
+  const closeMenu = () => {
+    menu.classList.remove("is-open");
+    menu.innerHTML = "";
+  };
+
+  const openMenu = () => {
+    menu.innerHTML = options
+      .map(
+        (option) =>
+          `<button type="button" class="skill-group-option" data-format-value="${option.value}">${option.label}</button>`
+      )
+      .join("");
+    menu.classList.add("is-open");
+  };
+
+  input.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (menu.classList.contains("is-open")) {
+      closeMenu();
+      return;
+    }
+    openMenu();
+  });
+
+  menu.addEventListener("mousedown", (event) => {
+    const optionButton = event.target.closest(".skill-group-option");
+    if (!optionButton) return;
+    event.preventDefault();
+    const value = optionButton.dataset.formatValue || "classic";
+    const chosen = options.find((option) => option.value === value);
+    select.value = value;
+    input.value = chosen ? chosen.label : input.value;
+    closeMenu();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-format-dropdown]")) {
+      closeMenu();
+    }
+  });
+}
+
 function setupSkillGroupDropdowns() {
   const optionsDataNode = document.getElementById("skill-group-options-data");
   if (!optionsDataNode) return;
@@ -570,7 +700,9 @@ function setupSkillGroupDropdowns() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupResumeSearch();
+  setupResumeFormatDropdown();
   setupSkillGroupDropdowns();
   setupCollapsibleSections();
   setupInlineEditButtons();
+  setupResumeBuilder();
 });
