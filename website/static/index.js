@@ -87,8 +87,53 @@ function sendEditRequest(url, payload) {
   });
 }
 
+function runEdit(url, payload) {
+  return sendEditRequest(url, payload)
+    .then(() => refreshProfileLists())
+    .catch((error) => {
+      console.error(error);
+      alert("Could not save changes. Please try again.");
+    });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function showInlineEditor(itemId, contentHtml, onSave, focusSelector) {
+  const item = document.getElementById(itemId);
+  if (!item) return;
+
+  item.style.display = "block";
+  item.style.width = "100%";
+
+  item.innerHTML = `
+    <div class="w-100">
+      ${contentHtml}
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" class="btn btn-sm btn-primary" data-inline-save>Save</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-inline-cancel>Cancel</button>
+      </div>
+    </div>
+  `;
+
+  const saveBtn = item.querySelector("[data-inline-save]");
+  const cancelBtn = item.querySelector("[data-inline-cancel]");
+  const focusEl = focusSelector ? item.querySelector(focusSelector) : null;
+
+  if (focusEl) focusEl.focus();
+
+  saveBtn?.addEventListener("click", () => onSave(item));
+  cancelBtn?.addEventListener("click", () => refreshProfileLists());
+}
+
 function refreshProfileLists() {
-  fetch(window.location.pathname)
+  return fetch(window.location.pathname)
     .then((res) => res.text())
     .then((html) => {
       const parser = new DOMParser();
@@ -103,15 +148,26 @@ function refreshProfileLists() {
       if (typeof window.syncSkillGroupOptionsFromHtml === "function") {
         window.syncSkillGroupOptionsFromHtml(doc);
       }
+      if (typeof window.setupCollapsibleSections === "function") {
+        window.setupCollapsibleSections();
+      }
     });
 }
 
 function editBio(bioId, currentBio) {
-  const updatedBio = prompt("Edit bio:", currentBio || "");
-  if (updatedBio === null) return;
-  if (!updatedBio.trim()) return;
-  sendEditRequest("/edit-bio", { bioId: bioId, bio: updatedBio.trim() }).then(
-    refreshProfileLists
+  const itemId = `bio-${bioId}`;
+  showInlineEditor(
+    itemId,
+    `
+      <label class="form-label mb-2">Edit Bio</label>
+      <textarea class="form-control" rows="3" data-bio-text>${escapeHtml(currentBio || "")}</textarea>
+    `,
+    (item) => {
+      const bio = item.querySelector("[data-bio-text]")?.value?.trim() || "";
+      if (!bio) return;
+      runEdit("/edit-bio", { bioId, bio });
+    },
+    "[data-bio-text]"
   );
 }
 
@@ -123,25 +179,30 @@ function editEducation(
   currentStartYear,
   currentEndYear
 ) {
-  const uni = prompt("Institution name:", currentUni || "");
-  if (uni === null) return;
-  const location = prompt("Location:", currentLocation || "");
-  if (location === null) return;
-  const degree = prompt("Degree:", currentDegree || "");
-  if (degree === null) return;
-  const startYear = prompt("Start year:", currentStartYear || "");
-  if (startYear === null) return;
-  const endYear = prompt("End year:", currentEndYear || "");
-  if (endYear === null) return;
-
-  sendEditRequest("/edit-education", {
-    educationId: educationId,
-    uni: uni.trim(),
-    location: location.trim(),
-    degree: degree.trim(),
-    start_year: startYear.trim(),
-    end_year: endYear.trim(),
-  }).then(refreshProfileLists);
+  const itemId = `education-${educationId}`;
+  showInlineEditor(
+    itemId,
+    `
+      <div class="row g-2">
+        <div class="col-md-6"><input class="form-control" data-edu-uni value="${escapeHtml(currentUni || "")}" placeholder="Institution name" /></div>
+        <div class="col-md-6"><input class="form-control" data-edu-location value="${escapeHtml(currentLocation || "")}" placeholder="Location" /></div>
+        <div class="col-md-6"><input class="form-control" data-edu-degree value="${escapeHtml(currentDegree || "")}" placeholder="Degree" /></div>
+        <div class="col-md-3"><input class="form-control" data-edu-start value="${escapeHtml(currentStartYear || "")}" placeholder="Start year" /></div>
+        <div class="col-md-3"><input class="form-control" data-edu-end value="${escapeHtml(currentEndYear || "")}" placeholder="End year" /></div>
+      </div>
+    `,
+    (item) => {
+      runEdit("/edit-education", {
+        educationId,
+        uni: item.querySelector("[data-edu-uni]")?.value?.trim() || "",
+        location: item.querySelector("[data-edu-location]")?.value?.trim() || "",
+        degree: item.querySelector("[data-edu-degree]")?.value?.trim() || "",
+        start_year: item.querySelector("[data-edu-start]")?.value?.trim() || "",
+        end_year: item.querySelector("[data-edu-end]")?.value?.trim() || "",
+      });
+    },
+    "[data-edu-uni]"
+  );
 }
 
 function editExperience(
@@ -152,61 +213,78 @@ function editExperience(
   currentStartDate,
   currentEndDate
 ) {
-  const role = prompt("Role:", currentRole || "");
-  if (role === null) return;
-  const comp = prompt("Company:", currentCompany || "");
-  if (comp === null) return;
-  const desc = prompt("Description:", currentDescription || "");
-  if (desc === null) return;
-  const startDate = prompt("Start date (YYYY-MM-DD):", currentStartDate || "");
-  if (startDate === null) return;
-  const endDate = prompt(
-    "End date (YYYY-MM-DD, leave blank if ongoing):",
-    currentEndDate || ""
+  const itemId = `experience-${experienceId}`;
+  showInlineEditor(
+    itemId,
+    `
+      <div class="row g-2">
+        <div class="col-md-6"><input class="form-control" data-exp-role value="${escapeHtml(currentRole || "")}" placeholder="Role" /></div>
+        <div class="col-md-6"><input class="form-control" data-exp-comp value="${escapeHtml(currentCompany || "")}" placeholder="Company" /></div>
+        <div class="col-12"><textarea class="form-control" rows="3" data-exp-desc placeholder="Description">${escapeHtml(currentDescription || "")}</textarea></div>
+        <div class="col-md-6"><input type="date" class="form-control" data-exp-start value="${escapeHtml(currentStartDate || "")}" /></div>
+        <div class="col-md-6"><input type="date" class="form-control" data-exp-end value="${escapeHtml(currentEndDate || "")}" /></div>
+      </div>
+    `,
+    (item) => {
+      runEdit("/edit-experience", {
+        experienceId,
+        role: item.querySelector("[data-exp-role]")?.value?.trim() || "",
+        comp: item.querySelector("[data-exp-comp]")?.value?.trim() || "",
+        desc: item.querySelector("[data-exp-desc]")?.value?.trim() || "",
+        start_date: item.querySelector("[data-exp-start]")?.value?.trim() || "",
+        end_date: item.querySelector("[data-exp-end]")?.value?.trim() || "",
+      });
+    },
+    "[data-exp-role]"
   );
-  if (endDate === null) return;
-
-  sendEditRequest("/edit-experience", {
-    experienceId: experienceId,
-    role: role.trim(),
-    comp: comp.trim(),
-    desc: desc.trim(),
-    start_date: startDate.trim(),
-    end_date: endDate.trim(),
-  }).then(refreshProfileLists);
 }
 
 function editProject(projectId, currentProj, currentTool, currentDesc, currentLink) {
-  const proj = prompt("Project title:", currentProj || "");
-  if (proj === null) return;
-  const tool = prompt("Tool/Tech used:", currentTool || "");
-  if (tool === null) return;
-  const desc = prompt("Description:", currentDesc || "");
-  if (desc === null) return;
-  const link = prompt("Project link (optional):", currentLink || "");
-  if (link === null) return;
-
-  sendEditRequest("/edit-project", {
-    projectId: projectId,
-    proj: proj.trim(),
-    tool: tool.trim(),
-    desc: desc.trim(),
-    link: link.trim(),
-  }).then(refreshProfileLists);
+  const itemId = `project-${projectId}`;
+  showInlineEditor(
+    itemId,
+    `
+      <div class="row g-2">
+        <div class="col-md-6"><input class="form-control" data-proj-title value="${escapeHtml(currentProj || "")}" placeholder="Project title" /></div>
+        <div class="col-md-6"><input class="form-control" data-proj-tool value="${escapeHtml(currentTool || "")}" placeholder="Tool/Tech" /></div>
+        <div class="col-12"><input type="url" class="form-control" data-proj-link value="${escapeHtml(currentLink || "")}" placeholder="Project link (optional)" /></div>
+        <div class="col-12"><textarea class="form-control" rows="3" data-proj-desc placeholder="Description">${escapeHtml(currentDesc || "")}</textarea></div>
+      </div>
+    `,
+    (item) => {
+      runEdit("/edit-project", {
+        projectId,
+        proj: item.querySelector("[data-proj-title]")?.value?.trim() || "",
+        tool: item.querySelector("[data-proj-tool]")?.value?.trim() || "",
+        desc: item.querySelector("[data-proj-desc]")?.value?.trim() || "",
+        link: item.querySelector("[data-proj-link]")?.value?.trim() || "",
+      });
+    },
+    "[data-proj-title]"
+  );
 }
 
 function editSkill(skillId, currentSkill, currentGroup) {
-  const data = prompt("Skill name:", currentSkill || "");
-  if (data === null) return;
-  if (!data.trim()) return;
-  const group = prompt("Skill group:", currentGroup || "");
-  if (group === null) return;
-
-  sendEditRequest("/edit-skill", {
-    skillId: skillId,
-    data: data.trim(),
-    group: group.trim(),
-  }).then(refreshProfileLists);
+  const itemId = `skill-${skillId}`;
+  showInlineEditor(
+    itemId,
+    `
+      <div class="row g-2">
+        <div class="col-md-6"><input class="form-control" data-skill-name value="${escapeHtml(currentSkill || "")}" placeholder="Skill" /></div>
+        <div class="col-md-6"><input class="form-control" data-skill-group value="${escapeHtml(currentGroup || "")}" placeholder="Group" /></div>
+      </div>
+    `,
+    (item) => {
+      const data = item.querySelector("[data-skill-name]")?.value?.trim() || "";
+      if (!data) return;
+      runEdit("/edit-skill", {
+        skillId,
+        data,
+        group: item.querySelector("[data-skill-group]")?.value?.trim() || "",
+      });
+    },
+    "[data-skill-name]"
+  );
 }
 
 // Generic AJAX form handler
@@ -272,6 +350,116 @@ function setupResumeSearch() {
     );
     if (noResumesMsg) {
       noResumesMsg.style.display = anyVisible ? "none" : "";
+    }
+  });
+}
+
+function setupCollapsibleSections() {
+  const sections = document.querySelectorAll(".editor-section[data-collapsible]");
+  if (!sections.length) return;
+
+  sections.forEach((section, index) => {
+    const title = section.querySelector(":scope > .section-title");
+    if (!title) return;
+    if (section.querySelector(":scope > .section-toggle")) return;
+
+    const label = (title.textContent || "Section").trim();
+    const storageKey = `profileSection:${label}`;
+    const body = document.createElement("div");
+    body.className = "section-body";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "section-toggle";
+    button.setAttribute("aria-expanded", "true");
+    button.setAttribute("aria-controls", `section-body-${index + 1}`);
+    button.innerHTML = `${title.outerHTML}<span class="section-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>`;
+
+    title.remove();
+
+    while (section.firstChild) {
+      body.appendChild(section.firstChild);
+    }
+
+    body.id = `section-body-${index + 1}`;
+    section.appendChild(button);
+    section.appendChild(body);
+
+    const setCollapsed = (collapsed) => {
+      body.classList.toggle("is-collapsed", collapsed);
+      button.setAttribute("aria-expanded", String(!collapsed));
+    };
+
+    const saved = localStorage.getItem(storageKey);
+    setCollapsed(saved ? saved === "collapsed" : true);
+
+    button.addEventListener("click", () => {
+      const isCollapsed = body.classList.toggle("is-collapsed");
+      button.setAttribute("aria-expanded", String(!isCollapsed));
+      localStorage.setItem(storageKey, isCollapsed ? "collapsed" : "expanded");
+    });
+  });
+}
+
+window.setupCollapsibleSections = setupCollapsibleSections;
+
+function setupInlineEditButtons() {
+  if (window.__inlineEditButtonsBound) return;
+  window.__inlineEditButtonsBound = true;
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-inline-edit]");
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const type = button.dataset.inlineEdit;
+    const id = button.dataset.id;
+    if (!type || !id) return;
+
+    if (type === "bio") {
+      editBio(id, button.dataset.bio || "");
+      return;
+    }
+
+    if (type === "education") {
+      editEducation(
+        id,
+        button.dataset.uni || "",
+        button.dataset.location || "",
+        button.dataset.degree || "",
+        button.dataset.start || "",
+        button.dataset.end || ""
+      );
+      return;
+    }
+
+    if (type === "experience") {
+      editExperience(
+        id,
+        button.dataset.role || "",
+        button.dataset.comp || "",
+        button.dataset.desc || "",
+        button.dataset.startDate || "",
+        button.dataset.endDate || ""
+      );
+      return;
+    }
+
+    if (type === "project") {
+      editProject(
+        id,
+        button.dataset.proj || "",
+        button.dataset.tool || "",
+        button.dataset.desc || "",
+        button.dataset.link || ""
+      );
+      return;
+    }
+
+    if (type === "skill") {
+      editSkill(id, button.dataset.skill || "", button.dataset.group || "");
     }
   });
 }
@@ -383,4 +571,6 @@ function setupSkillGroupDropdowns() {
 document.addEventListener("DOMContentLoaded", () => {
   setupResumeSearch();
   setupSkillGroupDropdowns();
+  setupCollapsibleSections();
+  setupInlineEditButtons();
 });

@@ -681,6 +681,62 @@ label,
   margin-bottom: 2.1rem;
 }
 
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0 0 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.section-toggle .section-title {
+  margin: 0;
+}
+
+.section-chevron {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #d6deef;
+  background: #f4f8ff;
+  color: #2c3e66;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.section-toggle:hover .section-chevron {
+  background: #e8efff;
+  border-color: #b9c8e6;
+}
+
+.section-toggle[aria-expanded="false"] .section-chevron {
+  transform: rotate(-90deg);
+}
+
+.section-body {
+  overflow: hidden;
+  max-height: 2200px;
+  opacity: 1;
+  transition:
+    max-height 0.28s ease,
+    opacity 0.2s ease;
+}
+
+.section-body.is-collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
 .editor-section > h1,
 .editor-section > h2,
 .editor-section > h3 {
