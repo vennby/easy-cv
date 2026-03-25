@@ -1,50 +1,53 @@
 {% extends "base.html" %} {% block content %}
-<section class="landing-shell">
+<section class="landing-shell landing-vibe">
   <div class="landing-glow landing-glow-left"></div>
   <div class="landing-glow landing-glow-right"></div>
 
-  <div class="hero-card landing-hero">
-    <span class="landing-badge">
-      <i class="fa-solid fa-sparkles me-2"></i>Professional resumes, instantly
-    </span>
-    <h1 class="hero-title">Design a standout resume with easy-cv</h1>
-    <p class="hero-subtitle">
-      Turn your profile into a clean, recruiter-ready resume with modern
-      templates and effortless edits.
-    </p>
+  <div class="hero-card landing-hero landing-vibe-card">
+    <div class="landing-vibe-grid">
+      <div>
+        <span class="landing-badge">
+          <i class="fa-solid fa-sparkles me-2"></i>Your story, your vibe, your resume
+        </span>
+        <h1 class="hero-title">Build a resume that feels like you</h1>
+        <p class="hero-subtitle">
+          No stiff templates, no chaos. Just a clean flow that turns your
+          profile into a resume with personality and professional polish.
+        </p>
 
-    <div class="landing-cta d-flex gap-3 justify-content-center flex-wrap">
-      <a
-        href="{{ url_for('auth.sign_up') }}"
-        class="btn btn-primary btn-lg px-4"
-        >Get Started Free</a
-      >
-      <a
-        href="{{ url_for('auth.sign_in') }}"
-        class="btn btn-outline-secondary btn-lg px-4"
-        >Sign In</a
-      >
-    </div>
+        <div class="landing-cta d-flex gap-3 flex-wrap">
+          <a
+            href="{{ url_for('auth.sign_up') }}"
+            class="btn btn-primary btn-lg px-4"
+            >Start Building</a
+          >
+          <a
+            href="{{ url_for('auth.sign_in') }}"
+            class="btn btn-outline-secondary btn-lg px-4"
+            >I already have an account</a
+          >
+        </div>
 
-    <div class="landing-points mt-4">
-      <span><i class="fa-solid fa-check"></i> ATS-friendly format</span>
-      <span><i class="fa-solid fa-check"></i> One-click PDF export</span>
-      <span><i class="fa-solid fa-check"></i> Fast profile-to-resume flow</span>
-    </div>
+        <div class="landing-points mt-4 justify-content-start">
+          <span><i class="fa-solid fa-check"></i> Pick only what you want to show</span>
+          <span><i class="fa-solid fa-check"></i> Edit in place, save instantly</span>
+          <span><i class="fa-solid fa-check"></i> Export sleek PDF resumes</span>
+        </div>
+      </div>
 
-    <div class="landing-metrics mt-4">
-      <div class="metric-card">
-        <h4>2 min</h4>
-        <p>Average setup time</p>
-      </div>
-      <div class="metric-card">
-        <h4>Clean</h4>
-        <p>Modern layouts</p>
-      </div>
-      <div class="metric-card">
-        <h4>PDF</h4>
-        <p>Ready to share</p>
-      </div>
+      <aside class="landing-soul-card">
+        <div class="landing-soul-pill">Creative + professional</div>
+        <h3>From profile to powerful in minutes</h3>
+        <ul>
+          <li><i class="fa-solid fa-pen-to-square"></i> Curate sections with one click</li>
+          <li><i class="fa-solid fa-layer-group"></i> Group skills the smart way</li>
+          <li><i class="fa-solid fa-file-arrow-down"></i> Download ready-to-send PDFs</li>
+        </ul>
+        <div class="landing-soul-metric">
+          <strong>2 min</strong>
+          <span>Average setup</span>
+        </div>
+      </aside>
     </div>
   </div>
 </section>

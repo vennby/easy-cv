@@ -188,9 +188,94 @@ body.no-sidebar .landing-shell {
   );
 }
 
+.landing-vibe .landing-hero {
+  max-width: 980px;
+  text-align: left;
+}
+
+.landing-vibe-card {
+  padding: 2.2rem 2rem;
+}
+
+.landing-vibe-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.landing-soul-card {
+  border: 1px solid #dbe3f1;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  padding: 1rem;
+  box-shadow: 0 16px 28px -24px rgba(31, 47, 82, 0.65);
+}
+
+.landing-soul-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid #d5e1fb;
+  background: #ecf2ff;
+  color: #31497a;
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.landing-soul-card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.7rem;
+}
+
+.landing-soul-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.landing-soul-card li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #34476e;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.landing-soul-card li i {
+  color: var(--primary);
+}
+
+.landing-soul-metric {
+  border-top: 1px solid #e1e8f5;
+  padding-top: 0.7rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.landing-soul-metric strong {
+  font-size: 1.18rem;
+  color: #273c64;
+}
+
+.landing-soul-metric span {
+  color: #63728f;
+  font-size: 0.86rem;
+}
+
 body.no-sidebar .landing-hero {
   margin: 0 auto;
   padding: 2rem 1.7rem;
+}
+
+body.no-sidebar .landing-vibe-card {
+  padding: 1.7rem 1.35rem;
 }
 
 .landing-glow {
@@ -264,6 +349,13 @@ body.no-sidebar .landing-metrics {
   gap: 0.6rem;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+@media (max-width: 991px) {
+  .landing-vibe-grid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
 }
 
 .landing-points span {
