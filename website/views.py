@@ -412,34 +412,41 @@ def create_resume():
         education_ids = request.form.getlist('educations')
         experience_ids = request.form.getlist('experiences')
         project_ids = request.form.getlist('projects')
-        skill_ids = request.form.getlist('skills')
+        selected_skill_groups = request.form.getlist('skill_groups')
         format = request.form.get('format', 'classic')
         resume = Resume(name=name, user_id=current_user.id, format=format)
         resume.bios = Bios.query.filter(Bios.id.in_(bio_ids)).all() if bio_ids else []
         resume.educations = Educations.query.filter(Educations.id.in_(education_ids)).all() if education_ids else []
         resume.experiences = Experiences.query.filter(Experiences.id.in_(experience_ids)).all() if experience_ids else []
         resume.projects = Projects.query.filter(Projects.id.in_(project_ids)).all() if project_ids else []
-        resume.skills = Skills.query.filter(Skills.id.in_(skill_ids)).all() if skill_ids else []
+        # Select all skills from the selected groups
+        resume.skills = Skills.query.filter(Skills.user_id == current_user.id, Skills.group.in_(selected_skill_groups)).all() if selected_skill_groups else []
         db.session.add(resume)
         db.session.commit()
         flash('Resume created!', category='success')
         return redirect(url_for('views.home'))
-    # GET: show selection form
-    skill_group_options = sorted({(skill.group or '').strip() for skill in current_user.skills if (skill.group or '').strip()})
+    # GET: show selection form - organize skills by group
+    skills_by_group = {}
+    for skill in current_user.skills:
+        group = (skill.group or 'Other').strip()
+        if group not in skills_by_group:
+            skills_by_group[group] = []
+        skills_by_group[group].append(skill)
+    skills_by_group = dict(sorted(skills_by_group.items()))
+    
     return render_template('resume_form.html',
         user=current_user,
         bios=current_user.bios,
         educations=current_user.educations,
         experiences=current_user.experiences,
         projects=current_user.projects,
-        skills=current_user.skills,
-        skill_group_options=skill_group_options,
+        skills_by_group=skills_by_group,
         resume=None,
         selected_bio_ids=set(),
         selected_education_ids=set(),
         selected_experience_ids=set(),
         selected_project_ids=set(),
-        selected_skill_ids=set(),
+        selected_skill_groups=set(),
         selected_format_options=['classic']
     )
 
@@ -482,39 +489,45 @@ def edit_resume(resume_id):
             proj.tool = (request.form.get(f'proj_tool_{proj.id}') or proj.tool).strip()
             proj.desc = (request.form.get(f'proj_desc_{proj.id}') or proj.desc).strip()
 
-        for skill in current_user.skills:
-            skill.data = (request.form.get(f'skill_data_{skill.id}') or skill.data).strip()
-            skill_group = (request.form.get(f'skill_group_{skill.id}') or '').strip()
-            skill.group = skill_group if skill_group else None
-
         bio_ids = request.form.getlist('bios')
         education_ids = request.form.getlist('educations')
         experience_ids = request.form.getlist('experiences')
         project_ids = request.form.getlist('projects')
-        skill_ids = request.form.getlist('skills')
+        selected_skill_groups = request.form.getlist('skill_groups')
         resume.bios = Bios.query.filter(Bios.id.in_(bio_ids)).all() if bio_ids else []
         resume.educations = Educations.query.filter(Educations.id.in_(education_ids)).all() if education_ids else []
         resume.experiences = Experiences.query.filter(Experiences.id.in_(experience_ids)).all() if experience_ids else []
         resume.projects = Projects.query.filter(Projects.id.in_(project_ids)).all() if project_ids else []
-        resume.skills = Skills.query.filter(Skills.id.in_(skill_ids)).all() if skill_ids else []
+        # Select all skills from the selected groups
+        resume.skills = Skills.query.filter(Skills.user_id == current_user.id, Skills.group.in_(selected_skill_groups)).all() if selected_skill_groups else []
         db.session.commit()
         flash('Resume updated!', category='success')
         return redirect(url_for('views.home'))
-    skill_group_options = sorted({(skill.group or '').strip() for skill in current_user.skills if (skill.group or '').strip()})
+    # Organize skills by group
+    skills_by_group = {}
+    for skill in current_user.skills:
+        group = (skill.group or 'Other').strip()
+        if group not in skills_by_group:
+            skills_by_group[group] = []
+        skills_by_group[group].append(skill)
+    skills_by_group = dict(sorted(skills_by_group.items()))
+    
+    # Determine which groups are selected in the current resume
+    selected_skill_groups = {(item.group or 'Other').strip() for item in resume.skills}
+    
     return render_template('resume_form.html',
         user=current_user,
         bios=current_user.bios,
         educations=current_user.educations,
         experiences=current_user.experiences,
         projects=current_user.projects,
-        skills=current_user.skills,
-        skill_group_options=skill_group_options,
+        skills_by_group=skills_by_group,
         resume=resume,
         selected_bio_ids={item.id for item in resume.bios},
         selected_education_ids={item.id for item in resume.educations},
         selected_experience_ids={item.id for item in resume.experiences},
         selected_project_ids={item.id for item in resume.projects},
-        selected_skill_ids={item.id for item in resume.skills},
+        selected_skill_groups=selected_skill_groups,
         selected_format_options=[resume.format] if resume.format else ['classic']
     )
 
