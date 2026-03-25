@@ -283,6 +283,9 @@
           <h5>{{ experience.role }} • {{ experience.comp }}</h5>
           <p style="white-space: pre-wrap">{{ experience.desc }}</p>
           <p>
+            <strong>Dates:</strong> {{ experience.start_date|fmt_month_year }}{% if experience.end_date %} to {{ experience.end_date|fmt_month_year }}{% elif experience.ongoing %} to Present{% endif %}
+          </p>
+          <p>
             <strong>Duration:</strong> {{
             calculate_duration(experience.start_date, experience.end_date) }}
           </p>
@@ -380,7 +383,7 @@
       {% for project in user.projects %}
       <li class="list-group-item" id="project-{{ project.id }}">
         <div class="d-flex justify-content-between">
-          <h5 class="mb-1">{{ project.proj }}</h5>
+          <h5 class="mb-1">{% if project.link %}<a href="{{ project.link }}" target="_blank" class="text-decoration-none">{{ project.proj }}</a>{% else %}{{ project.proj }}{% endif %}</h5>
           <span class="text-muted">{{ project.tool }}</span>
         </div>
         <div class="d-flex justify-content-between align-items-center">
@@ -389,7 +392,7 @@
             <button
               type="button"
               class="btn btn-sm btn-outline-primary action-btn"
-              onClick="editProject('{{ project.id }}', {{ project.proj|tojson }}, {{ project.tool|tojson }}, {{ project.desc|tojson }})"
+              onClick="editProject('{{ project.id }}', {{ project.proj|tojson }}, {{ project.tool|tojson }}, {{ project.desc|tojson }}, {{ (project.link or '')|tojson }})"
               aria-label="Edit"
             >
               <i class="fa fa-pen"></i>
@@ -429,6 +432,16 @@
             id="tool"
             class="form-control"
             required
+          />
+        </div>
+        <div class="col-12">
+          <label for="proj_link">Project Link (optional)</label>
+          <input
+            type="url"
+            name="link"
+            id="proj_link"
+            class="form-control"
+            placeholder="https://example.com"
           />
         </div>
         <div class="col-12">

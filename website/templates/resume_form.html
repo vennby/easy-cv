@@ -130,6 +130,9 @@
             <input class="form-control" name="proj_tool_{{ proj.id }}" value="{{ proj.tool }}" placeholder="Tool/Tech" />
           </div>
           <div class="col-12">
+            <input class="form-control" type="url" name="proj_link_{{ proj.id }}" value="{{ proj.link or '' }}" placeholder="Project Link (optional)" />
+          </div>
+          <div class="col-12">
             <textarea class="form-control" name="proj_desc_{{ proj.id }}" rows="2" placeholder="Description">{{ proj.desc }}</textarea>
           </div>
         </div>

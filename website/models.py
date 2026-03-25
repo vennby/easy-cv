@@ -91,6 +91,7 @@ class Projects(db.Model):
     proj = db.Column(db.String(50))
     tool = db.Column(db.String(50))
     desc = db.Column(db.String(250))
+    link = db.Column(db.String(200), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
 class Skills(db.Model):

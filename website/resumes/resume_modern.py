@@ -422,6 +422,9 @@ def generate_modern_resume(resume):
             c.setFont(BOLD, 10.5)
             c.setFillColor(_MAIN_TEXT)
             c.drawString(MX, my, proj.proj)
+            if proj.link:
+                tw = stringWidth(proj.proj, BOLD, 10.5)
+                c.linkURL(proj.link, (MX, my - 2, MX + tw, my + 10.5), relative=0)
             if proj.tool:
                 c.setFont(ITALIC, 9.5)
                 c.setFillColor(_ACCENT)

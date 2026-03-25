@@ -239,6 +239,9 @@ def generate_classic_resume(resume):
             c.setFont(BOLD, 11)
             c.setFillColor(colors.black)
             c.drawString(L, y, proj.proj)
+            if proj.link:
+                tw = stringWidth(proj.proj, BOLD, 11)
+                c.linkURL(proj.link, (L, y - 2, L + tw, y + 11), relative=0)
             if proj.tool:
                 c.setFont(ITALIC, 10.5)
                 c.drawRightString(R, y, proj.tool)

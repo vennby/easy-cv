@@ -48,7 +48,8 @@ def profile():
             return add_project(
                 request.form.get('proj'),
                 request.form.get('tool'),
-                request.form.get('desc')
+                request.form.get('desc'),
+                request.form.get('link')
             )
         elif 'skill' in request.form:
             return add_skill(request.form.get('skill'))
@@ -232,11 +233,12 @@ def add_experience(role, comp, desc, start_date, end_date, ongoing):
     flash("Experience added!", category='success')
     return redirect(url_for('views.profile'))
 
-def add_project(proj, tool, desc):
+def add_project(proj, tool, desc, link=None):
     new_project = Projects(
         proj=proj,
         tool=tool,
         desc=desc,
+        link=link,
         user_id=current_user.id
     )
 
@@ -370,6 +372,7 @@ def edit_project():
     project.proj = (data.get('proj') or '').strip()
     project.tool = (data.get('tool') or '').strip()
     project.desc = (data.get('desc') or '').strip()
+    project.link = (data.get('link') or '').strip() or None
     db.session.commit()
     return jsonify({'success': True})
 
@@ -488,6 +491,7 @@ def edit_resume(resume_id):
             proj.proj = (request.form.get(f'proj_title_{proj.id}') or proj.proj).strip()
             proj.tool = (request.form.get(f'proj_tool_{proj.id}') or proj.tool).strip()
             proj.desc = (request.form.get(f'proj_desc_{proj.id}') or proj.desc).strip()
+            proj.link = (request.form.get(f'proj_link_{proj.id}') or proj.link or '').strip() or None
 
         bio_ids = request.form.getlist('bios')
         education_ids = request.form.getlist('educations')

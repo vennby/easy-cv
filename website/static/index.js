@@ -176,19 +176,22 @@ function editExperience(
   }).then(refreshProfileLists);
 }
 
-function editProject(projectId, currentProj, currentTool, currentDesc) {
+function editProject(projectId, currentProj, currentTool, currentDesc, currentLink) {
   const proj = prompt("Project title:", currentProj || "");
   if (proj === null) return;
   const tool = prompt("Tool/Tech used:", currentTool || "");
   if (tool === null) return;
   const desc = prompt("Description:", currentDesc || "");
   if (desc === null) return;
+  const link = prompt("Project link (optional):", currentLink || "");
+  if (link === null) return;
 
   sendEditRequest("/edit-project", {
     projectId: projectId,
     proj: proj.trim(),
     tool: tool.trim(),
     desc: desc.trim(),
+    link: link.trim(),
   }).then(refreshProfileLists);
 }
 

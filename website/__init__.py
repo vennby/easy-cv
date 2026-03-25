@@ -4,11 +4,23 @@ from flask import Flask
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from datetime import datetime
 
 load_dotenv()
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
+
+def fmt_month_year(date_str):
+    """Format date string (YYYY-MM-DD or YYYY-MM or YYYY) to 'Mon YYYY' format."""
+    if not date_str:
+        return ""
+    for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+        try:
+            return datetime.strptime(str(date_str), fmt).strftime("%b %Y")
+        except (ValueError, TypeError):
+            continue
+    return str(date_str)
 
 def create_app():
     app = Flask(__name__)
@@ -33,6 +45,9 @@ def create_app():
     @login_manager.user_loader
     def load_user(id):
         return User.query.get(int(id))
+    
+    # Register custom Jinja filter
+    app.jinja_env.filters['fmt_month_year'] = fmt_month_year
     
     return app
 
