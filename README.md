@@ -43,13 +43,13 @@
     GOOGLE_REDIRECT_URI="http://127.0.0.1:5000/google-authorize"
     ```
 
-  If you don't want Google login yet, you can leave the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` values empty.
+    If you don't want Google login yet, you can leave the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` values empty.
 
-  In Google Cloud Console, add this authorized redirect URI for local development:
+    In Google Cloud Console, add this authorized redirect URI for local development:
 
-  ```
-  http://127.0.0.1:5000/google-authorize
-  ```
+    ```
+    http://127.0.0.1:5000/google-authorize
+    ```
 
 3. Then, simply run this to first install the necessary libraries all at once.
 

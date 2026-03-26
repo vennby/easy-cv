@@ -4,9 +4,9 @@ from sqlalchemy.sql import func
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True)
-    password = db.Column(db.String(150))
-    first_name = db.Column(db.String(150))
+    username = db.Column(db.Text, unique=True)
+    password = db.Column(db.Text)
+    first_name = db.Column(db.Text)
     personal_info = db.relationship('PersonalInfo', uselist=False, backref='user')
     bios = db.relationship('Bios')
     educations = db.relationship('Educations')
@@ -39,19 +39,19 @@ resume_skills = db.Table('resume_skills',
 
 class PersonalInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(150))
-    email = db.Column(db.String(150))
-    phone = db.Column(db.String(50))
-    address = db.Column(db.String(250))
-    linkedin = db.Column(db.String(150))
-    github = db.Column(db.String(150))
-    website = db.Column(db.String(150))
+    full_name = db.Column(db.Text)
+    email = db.Column(db.Text)
+    phone = db.Column(db.Text)
+    address = db.Column(db.Text)
+    linkedin = db.Column(db.Text)
+    github = db.Column(db.Text)
+    website = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
     image_path = db.Column(db.String(200), nullable=True)
 
 class Resume(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     bios = db.relationship('Bios', secondary=resume_bios, lazy='subquery')
     educations = db.relationship('Educations', secondary=resume_educations, lazy='subquery')
@@ -64,38 +64,38 @@ class Resume(db.Model):
 
 class Bios(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    bio = db.Column(db.String(160))
+    bio = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Educations(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    uni = db.Column(db.String(100))
-    location = db.Column(db.String(50))
-    degree = db.Column(db.String(100))
-    start_year = db.Column(db.String(10))
-    end_year = db.Column(db.String(10))
+    uni = db.Column(db.Text)
+    location = db.Column(db.Text)
+    degree = db.Column(db.Text)
+    start_year = db.Column(db.Text)
+    end_year = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Experiences(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    role = db.Column(db.String(25))
-    comp = db.Column(db.String(25))
-    desc = db.Column(db.String(500))
-    start_date = db.Column(db.String(10), nullable=False)
-    end_date = db.Column(db.String(10), nullable=True)
+    role = db.Column(db.Text)
+    comp = db.Column(db.Text)
+    desc = db.Column(db.Text)
+    start_date = db.Column(db.Text, nullable=False)
+    end_date = db.Column(db.Text, nullable=True)
     ongoing = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    proj = db.Column(db.String(50))
-    tool = db.Column(db.String(50))
-    desc = db.Column(db.String(250))
-    link = db.Column(db.String(200), nullable=True)
+    proj = db.Column(db.Text)
+    tool = db.Column(db.Text)
+    desc = db.Column(db.Text)
+    link = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
 class Skills(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String(50))
-    group = db.Column(db.String(50), nullable=True)  # New: group name for skill grouping
+    data = db.Column(db.Text)
+    group = db.Column(db.Text, nullable=True)  # New: group name for skill grouping
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import datetime
+from sqlalchemy import text
 
 load_dotenv()
 
@@ -41,6 +42,7 @@ def create_app():
     from .models import User, Skills
     
     create_database(app)
+    migrate_schema(app)
     
     login_manager = LoginManager()
     login_manager.login_view = 'auth.sign_in'
@@ -60,3 +62,79 @@ def create_database(app):
         with app.app_context():
             db.create_all()
             print('Created Database!')
+
+
+def migrate_schema(app):
+    with app.app_context():
+        dialect = db.engine.dialect.name
+        if dialect == 'postgresql':
+            statements = [
+                'ALTER TABLE "user" ALTER COLUMN username TYPE TEXT',
+                'ALTER TABLE "user" ALTER COLUMN password TYPE TEXT',
+                'ALTER TABLE "user" ALTER COLUMN first_name TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN full_name TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN email TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN phone TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN address TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN linkedin TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN github TYPE TEXT',
+                'ALTER TABLE personal_info ALTER COLUMN website TYPE TEXT',
+                'ALTER TABLE resume ALTER COLUMN name TYPE TEXT',
+                'ALTER TABLE bios ALTER COLUMN bio TYPE TEXT',
+                'ALTER TABLE educations ALTER COLUMN uni TYPE TEXT',
+                'ALTER TABLE educations ALTER COLUMN location TYPE TEXT',
+                'ALTER TABLE educations ALTER COLUMN degree TYPE TEXT',
+                'ALTER TABLE educations ALTER COLUMN start_year TYPE TEXT',
+                'ALTER TABLE educations ALTER COLUMN end_year TYPE TEXT',
+                'ALTER TABLE experiences ALTER COLUMN role TYPE TEXT',
+                'ALTER TABLE experiences ALTER COLUMN comp TYPE TEXT',
+                'ALTER TABLE experiences ALTER COLUMN desc TYPE TEXT',
+                'ALTER TABLE experiences ALTER COLUMN start_date TYPE TEXT',
+                'ALTER TABLE experiences ALTER COLUMN end_date TYPE TEXT',
+                'ALTER TABLE projects ALTER COLUMN proj TYPE TEXT',
+                'ALTER TABLE projects ALTER COLUMN tool TYPE TEXT',
+                'ALTER TABLE projects ALTER COLUMN desc TYPE TEXT',
+                'ALTER TABLE projects ALTER COLUMN link TYPE TEXT',
+                'ALTER TABLE skills ALTER COLUMN data TYPE TEXT',
+                'ALTER TABLE skills ALTER COLUMN "group" TYPE TEXT'
+            ]
+        elif dialect in ('mysql', 'mariadb'):
+            statements = [
+                'ALTER TABLE user MODIFY COLUMN username TEXT',
+                'ALTER TABLE user MODIFY COLUMN password TEXT',
+                'ALTER TABLE user MODIFY COLUMN first_name TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN full_name TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN email TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN phone TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN address TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN linkedin TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN github TEXT',
+                'ALTER TABLE personal_info MODIFY COLUMN website TEXT',
+                'ALTER TABLE resume MODIFY COLUMN name TEXT',
+                'ALTER TABLE bios MODIFY COLUMN bio TEXT',
+                'ALTER TABLE educations MODIFY COLUMN uni TEXT',
+                'ALTER TABLE educations MODIFY COLUMN location TEXT',
+                'ALTER TABLE educations MODIFY COLUMN degree TEXT',
+                'ALTER TABLE educations MODIFY COLUMN start_year TEXT',
+                'ALTER TABLE educations MODIFY COLUMN end_year TEXT',
+                'ALTER TABLE experiences MODIFY COLUMN role TEXT',
+                'ALTER TABLE experiences MODIFY COLUMN comp TEXT',
+                'ALTER TABLE experiences MODIFY COLUMN desc TEXT',
+                'ALTER TABLE experiences MODIFY COLUMN start_date TEXT',
+                'ALTER TABLE experiences MODIFY COLUMN end_date TEXT',
+                'ALTER TABLE projects MODIFY COLUMN proj TEXT',
+                'ALTER TABLE projects MODIFY COLUMN tool TEXT',
+                'ALTER TABLE projects MODIFY COLUMN desc TEXT',
+                'ALTER TABLE projects MODIFY COLUMN link TEXT',
+                'ALTER TABLE skills MODIFY COLUMN data TEXT',
+                'ALTER TABLE skills MODIFY COLUMN `group` TEXT'
+            ]
+        else:
+            statements = []
+
+        for stmt in statements:
+            try:
+                db.session.execute(text(stmt))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()

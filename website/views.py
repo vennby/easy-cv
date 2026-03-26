@@ -176,7 +176,11 @@ def delete_account():
 
 def add_bio(bio):
     bio = request.form.get('bio')
-    
+    bio = (bio or '').strip()
+    if not bio:
+        flash("Bio cannot be empty.", category='error')
+        return redirect(url_for('views.profile'))
+
     new_bio = Bios(
         bio = bio,
         user_id=current_user.id
@@ -326,13 +330,10 @@ def add_skill(skill_data=None):
     group = request.form.get('group')
     new_group = request.form.get('new_group')
     group = new_group if new_group else group
-    if len(skill_data) > 50:
-        flash("Skill must be smaller than 50 characters!", category='error')
-    else:
-        new_skill = Skills(data=skill_data, group=group, user_id=current_user.id)
-        db.session.add(new_skill)
-        db.session.commit()
-        flash("Skill added!", category='success')
+    new_skill = Skills(data=skill_data, group=group, user_id=current_user.id)
+    db.session.add(new_skill)
+    db.session.commit()
+    flash("Skill added!", category='success')
     return redirect(url_for('views.profile'))
 
 @views.route('/delete-bio', methods=['POST'])
@@ -357,7 +358,7 @@ def edit_bio():
     bio = Bios.query.get(bio_id)
     if not bio or bio.user_id != current_user.id:
         return jsonify({'error': 'Not found'}), 404
-    bio.bio = bio_text[:160]
+    bio.bio = bio_text
     db.session.commit()
     return jsonify({'success': True})
 
@@ -474,8 +475,8 @@ def edit_skill():
     skill_group = (data.get('group') or '').strip()
     if not skill_text:
         return jsonify({'error': 'Skill cannot be empty'}), 400
-    skill.data = skill_text[:50]
-    skill.group = skill_group[:50] if skill_group else None
+    skill.data = skill_text
+    skill.group = skill_group if skill_group else None
     db.session.commit()
     return jsonify({'success': True})
 
