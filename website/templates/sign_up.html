@@ -1,6 +1,10 @@
 {% extends "base.html" %} {% block content %}
 <div class="auth-card" style="max-width: 520px; margin: 2.4rem auto">
   <h3 class="text-center mb-4">Sign Up</h3>
+  <a href="{{ url_for('auth.google_sign_in') }}" class="btn btn-outline-secondary w-100 mb-3">
+    <i class="fa-brands fa-google me-2"></i>Continue with Google
+  </a>
+  <div class="text-center text-muted mb-3">or create an account manually</div>
   <form method="POST">
     <div class="form-group">
       <label for="username">Username</label>

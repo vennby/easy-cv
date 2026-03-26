@@ -38,7 +38,18 @@
     ```bash
     PROD_KEY="your_prod_key_here_literally_doesn't_matter_what_you_write"
     DATABASE_URL="sqlite:///database.db"
+    GOOGLE_CLIENT_ID="your_google_oauth_client_id"
+    GOOGLE_CLIENT_SECRET="your_google_oauth_client_secret"
+    GOOGLE_REDIRECT_URI="http://127.0.0.1:5000/google-authorize"
     ```
+
+  If you don't want Google login yet, you can leave the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` values empty.
+
+  In Google Cloud Console, add this authorized redirect URI for local development:
+
+  ```
+  http://127.0.0.1:5000/google-authorize
+  ```
 
 3. Then, simply run this to first install the necessary libraries all at once.
 
