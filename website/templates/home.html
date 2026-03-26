@@ -12,15 +12,79 @@
     >
   </div>
 
-  <form class="search-bar" method="get" action="{{ url_for('views.home') }}">
-    <input
-      type="text"
-      class="form-control"
-      name="search"
-      placeholder="Browse your past resumes..."
-      value="{{ search_query or '' }}"
-    />
-  </form>
+  <div class="resume-controls">
+    <form class="search-bar" method="get" action="{{ url_for('views.home') }}" style="flex: 1;">
+      <input
+        type="text"
+        class="form-control"
+        name="search"
+        placeholder="Browse your past resumes..."
+        value="{{ search_query or '' }}"
+      />
+    </form>
+    <div class="sort-dropdown" data-sort-dropdown>
+      <input
+        type="text"
+        class="form-control"
+        id="sortInput"
+        readonly
+        value="{% if sort_order == 'oldest' %}Oldest First{% else %}Newest First{% endif %}"
+        style="cursor: pointer; user-select: none;"
+      />
+      <span class="dropdown-indicator">
+        <i class="fa-solid fa-chevron-down"></i>
+      </span>
+      <div class="sort-menu">
+        <button type="button" class="sort-option" data-sort="newest">Newest First</button>
+        <button type="button" class="sort-option" data-sort="oldest">Oldest First</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function setupSortDropdown() {
+      const dropdown = document.querySelector('[data-sort-dropdown]');
+      const input = dropdown.querySelector('#sortInput');
+      const menu = dropdown.querySelector('.sort-menu');
+      const options = dropdown.querySelectorAll('.sort-option');
+      
+      // Toggle menu
+      input.addEventListener('click', () => {
+        menu.classList.toggle('is-open');
+      });
+      
+      // Handle option selection
+      options.forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.preventDefault();
+          const sortValue = option.getAttribute('data-sort');
+          
+          // Get current search query from URL or form
+          const searchInput = document.querySelector('input[name="search"]');
+          const searchValue = searchInput ? searchInput.value : '';
+          
+          // Build new URL with both search and sort parameters
+          const params = new URLSearchParams();
+          if (searchValue) {
+            params.set('search', searchValue);
+          }
+          params.set('sort', sortValue);
+          
+          // Navigate to the new URL
+          window.location.href = '{{ url_for("views.home") }}?' + params.toString();
+        });
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target)) {
+          menu.classList.remove('is-open');
+        }
+      });
+    }
+    
+    setupSortDropdown();
+  </script>
 
   <div class="row">
     {% for resume in resumes %}

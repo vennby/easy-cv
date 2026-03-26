@@ -18,11 +18,21 @@ def home():
         return redirect(url_for('views.profile'))
     
     search_query = request.args.get('search', '').strip() if 'search' in request.args else ''
-    resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc())
+    sort_order = request.args.get('sort', 'newest').strip()
+    
+    resumes = Resume.query.filter_by(user_id=current_user.id)
+    
+    # Apply sorting
+    if sort_order == 'oldest':
+        resumes = resumes.order_by(Resume.created_at.asc())
+    else:  # default to newest
+        resumes = resumes.order_by(Resume.created_at.desc())
+    
     if search_query:
         resumes = resumes.filter(Resume.name.ilike(f"%{search_query}%"))
+    
     resumes = resumes.all()
-    return render_template("home.html", user=current_user, resumes=resumes, search_query=search_query)
+    return render_template("home.html", user=current_user, resumes=resumes, search_query=search_query, sort_order=sort_order)
 
 @views.route('/profile', methods=['GET','POST'])
 @login_required
