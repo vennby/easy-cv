@@ -99,8 +99,8 @@ def _fmt_date(ds):
 # ─────────────────────────────────────────────────────────────────────────────
 def generate_modern_resume(resume):
     BODY   = _register_fonts()
-    BOLD   = "Times-Bold"
-    ITALIC = "Times-Italic"
+    BOLD   = BODY
+    ITALIC = BODY
     BULL   = "\u2022"
 
     PAGE_W, PAGE_H = letter      # 612 x 792 pt

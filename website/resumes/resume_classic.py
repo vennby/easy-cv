@@ -10,7 +10,7 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Font registration
-# EBGaramond for body; Times-Bold / Times-Italic as built-in serif companions
+# EBGaramond is used across all text to keep Unicode glyph support intact
 # ─────────────────────────────────────────────────────────────────────────────
 def _register_fonts():
     font_dir = os.path.join(os.path.dirname(__file__), "..", "fonts")
@@ -22,9 +22,9 @@ def _register_fonts():
 
 def generate_classic_resume(resume):
     # ── constants ────────────────────────────────────────────────────────
-    BODY   = _register_fonts()   # EBGaramond (serif, same as current)
-    BOLD   = "Times-Bold"        # built-in serif bold — blends with EB Garamond
-    ITALIC = "Times-Italic"      # built-in serif italic
+    BODY   = _register_fonts()   # Unicode-capable body font
+    BOLD   = BODY                # Keep unicode support for all text
+    ITALIC = BODY                # Keep unicode support for all text
 
     PAGE_W, PAGE_H = letter
     L      = 43                  # left  margin  (points)

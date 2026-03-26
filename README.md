@@ -35,10 +35,10 @@
 
 2. Create a `.env` file and add the following in it, to make it run for now.
 
-  ```bash
-  PROD_KEY="your_prod_key_here_literally_doesn't_matter_what_you_write"
-  DATABASE_URL="sqlite:///database.db"
-  ```
+    ```bash
+    PROD_KEY="your_prod_key_here_literally_doesn't_matter_what_you_write"
+    DATABASE_URL="sqlite:///database.db"
+    ```
 
 3. Then, simply run this to first install the necessary libraries all at once.
 
