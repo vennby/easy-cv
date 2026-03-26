@@ -12,6 +12,11 @@ views = Blueprint('views', __name__)
 @views.route('/home', methods=['GET', 'POST'])
 @login_required
 def home():
+    # If user has no resumes, redirect to profile page
+    resume_count = Resume.query.filter_by(user_id=current_user.id).count()
+    if resume_count == 0:
+        return redirect(url_for('views.profile'))
+    
     search_query = request.args.get('search', '').strip() if 'search' in request.args else ''
     resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc())
     if search_query:
