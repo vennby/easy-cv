@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* fonts */
+
+/* tailwind nord theme */
+@theme {
+  /* colors */
+  --color-nord-bg: #2e3440;
+  --color-nord-bg2: #3b4252;
+  --color-nord-bg4: #4c566a;
+  --color-nord-btn-primary: #88c0d0;
+  --color-nord-btn-secondary: #d8dee9;
+  --color-nord-red: #bf616a;
+  --color-nord-green: #a3be8c;
+  --color-nord-yellow: #ebcb8b;
+  --color-nord-purple: #b48ead;
+
+  /* fonts */
+  --font-sans: "Josefin Sans", sans-serif;
+}
+
+:root {
+  background-color: var(--color-nord-bg);
+  color: var(--color-nord-btn-secondary);
+}
