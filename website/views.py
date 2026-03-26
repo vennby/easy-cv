@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for, send_file, abort
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from .models import *
 from . import db
 from .resumes.resume_classic import generate_classic_resume
@@ -99,6 +99,65 @@ def update_personal_info():
     db.session.commit()
     flash('Personal information updated!', category='success')
     return redirect(url_for('views.profile'))
+
+@views.route('/settings', methods=['GET'])
+@login_required
+def settings():
+    return render_template('settings.html', user=current_user)
+
+@views.route('/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    confirmation = (request.form.get('delete_confirmation') or '').strip().upper()
+    if confirmation != 'DELETE':
+        flash("Type DELETE to confirm account deletion.", category='error')
+        return redirect(url_for('views.settings'))
+
+    user = current_user
+
+    try:
+        personal_info = PersonalInfo.query.filter_by(user_id=user.id).first()
+        if personal_info and personal_info.image_path:
+            image_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', personal_info.image_path)
+            if os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                except OSError:
+                    pass
+
+        resumes = Resume.query.filter_by(user_id=user.id).all()
+        for resume in resumes:
+            resume.bios = []
+            resume.educations = []
+            resume.experiences = []
+            resume.projects = []
+            resume.skills = []
+
+        db.session.flush()
+
+        for resume in resumes:
+            db.session.delete(resume)
+
+        Bios.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        Educations.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        Experiences.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        Projects.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        Skills.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        PersonalInfo.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+
+        user_id = user.id
+        user_record = User.query.get(user_id)
+        if user_record:
+            db.session.delete(user_record)
+
+        db.session.commit()
+        logout_user()
+        flash('Your account and all related data were deleted.', category='success')
+        return redirect(url_for('auth.sign_in'))
+    except Exception:
+        db.session.rollback()
+        flash('Could not delete account right now. Please try again.', category='error')
+        return redirect(url_for('views.settings'))
 
 def add_bio(bio):
     bio = request.form.get('bio')

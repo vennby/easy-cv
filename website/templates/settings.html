@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="editor-card">
+  <div class="mb-4">
+    <h1 class="page-heading">Settings</h1>
+    <p class="page-subtitle">
+      Manage critical account actions.
+    </p>
+  </div>
+
+  <section class="editor-section panel-card danger-zone mb-0">
+    <h2 class="section-title">Danger Zone</h2>
+    <p class="page-subtitle mb-3">
+      Deleting your account permanently removes your profile, resumes, and all saved data.
+    </p>
+    <form method="POST" action="{{ url_for('views.delete_account') }}" class="d-flex flex-column gap-3">
+      <div>
+        <label for="delete_confirmation" class="form-label">
+          Type <strong>DELETE</strong> to confirm
+        </label>
+        <input
+          type="text"
+          name="delete_confirmation"
+          id="delete_confirmation"
+          class="form-control"
+          placeholder="DELETE"
+          required
+        />
+      </div>
+      <div>
+        <button
+          type="submit"
+          class="btn btn-outline-danger"
+          onclick="return confirm('This will permanently delete your account and all data. Continue?');"
+        >
+          Delete My Account
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
