@@ -22,7 +22,7 @@
 
 ### Here's what it looks like!
 
-<img src="assets/home.png">
+https://github.com/user-attachments/assets/ac038569-0c62-456c-9f9d-9d5801f996cf
 
 ### How to run it locally?
 
