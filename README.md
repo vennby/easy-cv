@@ -24,7 +24,7 @@
 
 <img src="assets/home.png">
 
-### How to run it?
+### How to run it locally?
 
 1. Clone the repo, download it, do whatever you'd like to set it up in your code editor.
 
@@ -36,8 +36,11 @@
 2. Create a `.env` file and add the following in it, to make it run for now.
 
     ```bash
+    # These can be pasted in exactly as they are rn
     PROD_KEY="your_prod_key_here_literally_doesn't_matter_what_you_write"
     DATABASE_URL="sqlite:///database.db"
+
+    ### If you want Google Auth to run locally, you'd have to get these credentials for yourself
     GOOGLE_CLIENT_ID="your_google_oauth_client_id"
     GOOGLE_CLIENT_SECRET="your_google_oauth_client_secret"
     GOOGLE_REDIRECT_URI="http://127.0.0.1:5000/google-authorize"
