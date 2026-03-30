@@ -31,6 +31,48 @@ def home():
     resumes = resumes.all()
     return render_template("home.html", user=current_user, resumes=resumes, search_query=search_query, sort_order=sort_order)
 
+
+@views.route('/onboarding-state', methods=['GET'])
+@login_required
+def onboarding_state():
+    personal_info = PersonalInfo.query.filter_by(user_id=current_user.id).first()
+    has_personal_info = bool(
+        personal_info and
+        (personal_info.full_name or '').strip() and
+        (personal_info.email or '').strip()
+    )
+
+    counts = {
+        'personal_info': 1 if has_personal_info else 0,
+        'bios': len(current_user.bios),
+        'educations': len(current_user.educations),
+        'experiences': len(current_user.experiences),
+        'projects': len(current_user.projects),
+        'skills': len(current_user.skills),
+        'resumes': Resume.query.filter_by(user_id=current_user.id).count(),
+    }
+
+    profile_ready = all(counts[key] > 0 for key in ['personal_info', 'bios', 'educations', 'experiences', 'projects', 'skills'])
+
+    return jsonify({
+        'completed': bool(current_user.onboarding_completed),
+        'profile_ready': profile_ready,
+        'counts': counts,
+        'github_repo': 'https://github.com/vennby/easy-cv',
+        'github_issues': 'https://github.com/vennby/easy-cv/issues'
+    })
+
+
+@views.route('/onboarding-complete', methods=['POST'])
+@login_required
+def onboarding_complete():
+    if current_user.onboarding_completed:
+        return jsonify({'success': True})
+
+    current_user.onboarding_completed = True
+    db.session.commit()
+    return jsonify({'success': True})
+
 @views.route('/profile', methods=['GET','POST'])
 @login_required
 def profile():

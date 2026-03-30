@@ -10,6 +10,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.Text, unique=True)
     password = db.Column(db.Text)
     first_name = db.Column(db.Text)
+    onboarding_completed = db.Column(db.Boolean, nullable=False, default=False)
     personal_info = db.relationship('PersonalInfo', uselist=False, backref='user')
     bios = db.relationship('Bios')
     educations = db.relationship('Educations')

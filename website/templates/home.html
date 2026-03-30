@@ -7,7 +7,7 @@
         Create, edit, preview, and download polished resumes.
       </p>
     </div>
-    <a href="{{ url_for('views.create_resume') }}" class="btn btn-primary"
+    <a href="{{ url_for('views.create_resume') }}" class="btn btn-primary" id="tour-create-resume-btn"
       >Create Resume</a
     >
   </div>
@@ -86,7 +86,7 @@
     setupSortDropdown();
   </script>
 
-  <div class="row">
+  <div class="row" id="tour-resumes-grid">
     {% for resume in resumes %}
     <div class="col-md-4 mb-4">
       <div class="card h-100">
@@ -112,7 +112,7 @@
         <div class="card-footer d-flex justify-content-between">
           <a
             href="{{ url_for('views.preview_resume_pdf', resume_id=resume.id) }}"
-            class="btn btn-outline-info btn-sm"
+            class="btn btn-outline-info btn-sm{% if loop.first %} tour-preview-btn{% endif %}"
             >Preview</a
           >
           <a
@@ -135,7 +135,7 @@
           </form>
           <a
             href="{{ url_for('views.download_specific_resume', resume_id=resume.id) }}"
-            class="btn btn-success btn-sm"
+            class="btn btn-success btn-sm{% if loop.first %} tour-download-btn{% endif %}"
             title="Download PDF"
           >
             <i class="fa-solid fa-download"></i>

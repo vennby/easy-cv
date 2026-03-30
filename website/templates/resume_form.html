@@ -4,10 +4,10 @@
   <h1 class="page-heading mb-2">{{ 'Edit' if resume else 'Create' }} Resume</h1>
   <p class="page-subtitle mb-4">Pick the sections you want first, then edit only those details.</p>
 
-  <form method="POST" data-resume-builder>
+  <form method="POST" data-resume-builder id="tour-resume-builder-form">
     <div class="resume-meta-grid mb-3">
       <div>
-        <label for="name" class="form-label">Resume Name</label>
+        <label for="name" class="form-label" id="tour-resume-name">Resume Name</label>
         <input
           type="text"
           class="form-control"
@@ -18,7 +18,7 @@
         />
       </div>
       <div>
-        <label for="format" class="form-label">Resume Format</label>
+        <label for="format" class="form-label" id="tour-resume-format">Resume Format</label>
         <div class="skill-group-dropdown" data-format-dropdown>
           <input
             id="format_display"
@@ -185,7 +185,7 @@
     </section>
 
     <div class="mt-4">
-      <button type="submit" class="btn btn-success">{{ 'Update' if resume else 'Create' }} Resume</button>
+      <button type="submit" class="btn btn-success" id="tour-submit-resume-btn">{{ 'Update' if resume else 'Create' }} Resume</button>
       <a href="{{ url_for('views.home') }}" class="btn btn-secondary ms-2">Cancel</a>
     </div>
   </form>

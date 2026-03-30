@@ -144,6 +144,16 @@ def migrate_schema(app):
         try:
             inspector = inspect(db.engine)
             columns = {column['name'] for column in inspector.get_columns('personal_info')}
+            user_columns = {column['name'] for column in inspector.get_columns('user')}
+
+            if 'onboarding_completed' not in user_columns:
+                if dialect == 'postgresql':
+                    db.session.execute(text('ALTER TABLE "user" ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE'))
+                elif dialect in ('mysql', 'mariadb'):
+                    db.session.execute(text('ALTER TABLE user ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE'))
+                else:
+                    db.session.execute(text('ALTER TABLE user ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0'))
+                db.session.commit()
 
             if 'image_data' not in columns:
                 if dialect == 'postgresql':

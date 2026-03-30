@@ -883,6 +883,265 @@ function setupSkillGroupDropdowns() {
   });
 }
 
+function setupFirstTimeOnboarding() {
+  if (document.body.classList.contains("no-sidebar")) return;
+
+  const path = window.location.pathname;
+  const resumeActionsKey = "easycv_onboarding_resume_actions";
+
+  let coach = null;
+  let statePollTimer = null;
+  let lastStateSignature = "";
+
+  const sectionLabels = {
+    personal_info: "Personal Info",
+    bios: "Bio",
+    educations: "Education",
+    experiences: "Experience",
+    projects: "Projects",
+    skills: "Skills",
+  };
+
+  const ensureCoach = () => {
+    if (coach) return coach;
+    coach = document.createElement("aside");
+    coach.className = "tour-coach";
+    document.body.appendChild(coach);
+    return coach;
+  };
+
+  const clearCoach = () => {
+    if (coach) {
+      coach.remove();
+      coach = null;
+    }
+    if (statePollTimer) {
+      window.clearInterval(statePollTimer);
+      statePollTimer = null;
+    }
+  };
+
+  const readResumeActions = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(resumeActionsKey) || "{}");
+      return {
+        preview: !!parsed.preview,
+        download: !!parsed.download,
+      };
+    } catch (_error) {
+      return { preview: false, download: false };
+    }
+  };
+
+  const saveResumeActions = (actions) => {
+    localStorage.setItem(resumeActionsKey, JSON.stringify(actions));
+  };
+
+  const bindResumeActionTracking = () => {
+    document.addEventListener("click", (event) => {
+      const anchor = event.target.closest("a[href]");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") || "";
+      if (!href.includes("/preview_pdf") && !href.includes("/download")) return;
+
+      const actions = readResumeActions();
+      if (href.includes("/preview_pdf")) actions.preview = true;
+      if (href.includes("/download")) actions.download = true;
+      saveResumeActions(actions);
+
+      if (path === "/home") {
+        setTimeout(() => {
+          fetch("/onboarding-state")
+            .then((res) => res.json())
+            .then((state) => {
+              if (!(state.completed && !forceTour)) {
+                renderHomeCoach(state);
+              }
+            })
+            .catch(() => {});
+        }, 120);
+      }
+    });
+  };
+
+  const renderChecklist = (counts) => {
+    const keys = ["personal_info", "bios", "educations", "experiences", "projects", "skills"];
+    return keys
+      .map((key) => {
+        const done = (counts[key] || 0) > 0;
+        return `<li class="${done ? "done" : ""}">${done ? "✅" : "⬜"} ${sectionLabels[key]}</li>`;
+      })
+      .join("");
+  };
+
+  const profileReadyFromCounts = (counts) => {
+    const keys = ["personal_info", "bios", "educations", "experiences", "projects", "skills"];
+    return keys.every((key) => (counts[key] || 0) > 0);
+  };
+
+  const attachCoachActions = (handlers) => {
+    const container = ensureCoach();
+    if (handlers.onNext) {
+      container.querySelector("[data-tour-next]")?.addEventListener("click", handlers.onNext);
+    }
+    if (handlers.onFinish) {
+      container.querySelector("[data-tour-finish]")?.addEventListener("click", handlers.onFinish);
+    }
+  };
+
+  const clearTourParam = () => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("tour")) return;
+    url.searchParams.delete("tour");
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, "", next);
+  };
+
+  const finishOnboarding = () => {
+    fetch("/onboarding-complete", { method: "POST" })
+      .finally(() => {
+        localStorage.removeItem(resumeActionsKey);
+        clearTourParam();
+        clearCoach();
+      });
+  };
+
+  const startStatePolling = (onState) => {
+    if (statePollTimer) return;
+    statePollTimer = window.setInterval(() => {
+      fetch("/onboarding-state")
+        .then((res) => res.json())
+        .then((state) => {
+          const signature = JSON.stringify(state.counts || {});
+          if (signature !== lastStateSignature) {
+            lastStateSignature = signature;
+            onState(state);
+          }
+        })
+        .catch(() => {});
+    }, 1100);
+  };
+
+  const renderProfileCoach = (state) => {
+    const counts = state.counts || {};
+    const ready = profileReadyFromCounts(counts);
+    const container = ensureCoach();
+    container.innerHTML = `
+      <h3>Welcome to EasyCV!</h3>
+      <p>Build your profile database first. Add at least one record in every section below.</p>
+      <ul class="tour-checklist">${renderChecklist(counts)}</ul>
+      <p class="tour-note">We stay on this step until all sections have at least one record.</p>
+      <div class="tour-actions">
+        <button type="button" class="btn btn-sm btn-primary" data-tour-next ${ready ? "" : "disabled"}>Go to Resumes</button>
+      </div>
+    `;
+
+    attachCoachActions({
+      onNext: () => {
+        if (ready) window.location.href = "/home?tour=1";
+      },
+    });
+  };
+
+  const renderHomeCoach = (state) => {
+    const counts = state.counts || {};
+    const resumeCount = counts.resumes || 0;
+    const container = ensureCoach();
+    const actions = readResumeActions();
+    const readyToFinish = actions.preview && actions.download;
+
+    if (resumeCount === 0) {
+      container.innerHTML = `
+        <h3>Next: Create your tailored resume</h3>
+        <p>Your profile is ready. Now create your first tailored resume from the Resumes page.</p>
+        <div class="tour-actions">
+          <a href="/resume/create?tour=1" class="btn btn-sm btn-primary">Create Resume</a>
+        </div>
+      `;
+      return;
+    }
+
+    if (!readyToFinish) {
+      container.innerHTML = `
+        <h3>Almost done: Preview & Download</h3>
+        <p>Before finishing the tour, do these once from a resume card:</p>
+        <ul class="tour-checklist">
+          <li class="${actions.preview ? "done" : ""}">${actions.preview ? "✅" : "⬜"} Preview a resume</li>
+          <li class="${actions.download ? "done" : ""}">${actions.download ? "✅" : "⬜"} Download a resume</li>
+        </ul>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <h3>You’re ready!</h3>
+      <p>You created your resume. If you have feedback, suggestions, improvements, or issues, please share them on GitHub. If you like the project, leave a star.</p>
+      <div class="tour-actions">
+        <a href="${escapeHtml(state.github_issues || "https://github.com/vennby/easy-cv/issues")}" target="_blank" class="btn btn-sm btn-outline-primary">Open Issues</a>
+        <a href="${escapeHtml(state.github_repo || "https://github.com/vennby/easy-cv")}" target="_blank" class="btn btn-sm btn-outline-secondary">Star on GitHub</a>
+        <button type="button" class="btn btn-sm btn-success" data-tour-finish>Finish</button>
+      </div>
+    `;
+
+    attachCoachActions({
+      onFinish: () => finishOnboarding(),
+    });
+  };
+
+  const renderResumeCreateCoach = () => {
+    const container = ensureCoach();
+    container.innerHTML = `
+      <h3>Create Resume</h3>
+      <p>Set a name, choose format, pick sections, and click <strong>Create Resume</strong>. After saving, you’ll return to Resumes for the final step.</p>
+    `;
+  };
+
+  fetch("/onboarding-state")
+    .then((res) => res.json())
+    .then((state) => {
+      if (state.completed) {
+        clearCoach();
+        return;
+      }
+
+      if (path === "/profile") {
+        lastStateSignature = JSON.stringify(state.counts || {});
+        renderProfileCoach(state);
+        startStatePolling((latestState) => {
+          if (!(latestState.completed && !forceTour)) {
+            renderProfileCoach(latestState);
+          }
+        });
+        return;
+      }
+
+      if (!state.profile_ready && path !== "/profile") {
+        window.location.href = "/profile?tour=1";
+        return;
+      }
+
+      if (path === "/home") {
+        bindResumeActionTracking();
+        renderHomeCoach(state);
+        startStatePolling((latestState) => {
+          if (!(latestState.completed && !forceTour)) {
+            renderHomeCoach(latestState);
+          }
+        });
+        return;
+      }
+
+      if (path === "/resume/create") {
+        renderResumeCreateCoach();
+        return;
+      }
+
+    })
+    .catch((_error) => {
+      clearCoach();
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupResumeSearch();
   setupResumeFormatDropdown();
@@ -891,4 +1150,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCollapsibleSections();
   setupInlineEditButtons();
   setupResumeBuilder();
+  setupFirstTimeOnboarding();
 });

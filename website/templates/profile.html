@@ -7,7 +7,7 @@
     </p>
   </div>
 
-  <section class="editor-section panel-card" data-collapsible>
+  <section class="editor-section panel-card" data-collapsible id="tour-personal-info">
     <h2 class="section-title">Personal Information</h2>
     <form
       method="POST"
@@ -131,7 +131,7 @@
     </form>
   </section>
 
-  <section class="editor-section panel-card" data-collapsible>
+  <section class="editor-section panel-card" data-collapsible id="tour-bio">
     <h2 class="section-title">Bio</h2>
     <ul class="list-group list-group-flush" id="bio">
       {% for bio in user.bios %}
@@ -178,7 +178,7 @@
     </form>
   </section>
 
-  <section class="editor-section panel-card" data-collapsible>
+  <section class="editor-section panel-card" data-collapsible id="tour-education">
     <h2 class="section-title">Education</h2>
     <ul class="list-group list-group-flush" id="education">
       {% for education in user.educations %}
@@ -281,7 +281,7 @@
     </form>
   </section>
 
-  <section class="editor-section panel-card" data-collapsible>
+  <section class="editor-section panel-card" data-collapsible id="tour-experience">
     <h2 class="section-title">Experiences</h2>
     <ul class="list-group list-group-flush" id="experience">
       {% for experience in user.experiences %}
@@ -394,7 +394,7 @@
     </form>
   </section>
 
-  <section class="editor-section panel-card" data-collapsible>
+  <section class="editor-section panel-card" data-collapsible id="tour-projects">
     <h2 class="section-title">Projects</h2>
     <ul class="list-group list-group-flush" id="project">
       {% for project in user.projects %}
@@ -509,7 +509,7 @@
     </form>
   </section>
 
-  <section class="editor-section panel-card mb-0" data-collapsible>
+  <section class="editor-section panel-card mb-0" data-collapsible id="tour-skills">
     <h2 class="section-title">Skills</h2>
     <ul class="list-group list-group-flush" id="skill">
       {% set grouped_skills = {} %} {% for skill in user.skills %} {% set group

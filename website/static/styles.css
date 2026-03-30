@@ -100,6 +100,133 @@ h6 {
   margin-left: 60px;
 }
 
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.4);
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.onboarding-card {
+  width: min(760px, 94vw);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #dce4f2;
+  box-shadow: 0 20px 50px -35px rgba(25, 40, 71, 0.9);
+  padding: 1.2rem;
+}
+
+.onboarding-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+
+.onboarding-subtitle {
+  font-size: 0.95rem;
+  color: #4a5a7f;
+  margin-bottom: 0.9rem;
+}
+
+.onboarding-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.45rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-checklist li {
+  border: 1px solid #dde5f2;
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+  background: #f8fbff;
+}
+
+.onboarding-checklist li.done {
+  border-color: #b8e4cc;
+  background: #eefaf4;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.onboarding-note {
+  font-size: 0.85rem;
+  color: #5e6d8b;
+  margin-bottom: 0.8rem;
+}
+
+.tour-coach {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: min(320px, calc(100vw - 2rem));
+  background: #ffffff;
+  border: 1px solid #d9e2f2;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -28px rgba(25, 40, 71, 0.95);
+  padding: 0.75rem;
+  z-index: 2600;
+  max-height: 48vh;
+  overflow: auto;
+}
+
+.tour-coach h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.tour-coach p {
+  font-size: 0.84rem;
+  color: #46597f;
+  margin-bottom: 0.4rem;
+}
+
+.tour-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0.6rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tour-checklist li {
+  border: 1px solid #dbe4f3;
+  border-radius: 10px;
+  padding: 0.28rem 0.42rem;
+  font-size: 0.8rem;
+  background: #f8fbff;
+}
+
+.tour-checklist li.done {
+  border-color: #b8e4cc;
+  background: #eefaf4;
+}
+
+.tour-note {
+  font-size: 0.76rem;
+  color: #61739b;
+}
+
+.tour-actions {
+  margin-top: 0.35rem;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .user-icon {
   color: #9db0da;
   font-size: 5rem;

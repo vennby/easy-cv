@@ -37,6 +37,8 @@ def sign_in():
             if check_password_hash(user.password, password):
                 flash("Signed in successfully!", category='success')
                 login_user(user, remember=True)
+                if not user.onboarding_completed:
+                    return redirect(url_for('views.profile', tour='1'))
                 return redirect(url_for('views.home'))
             else:
                 flash("Incorrect password, try again.", category='error')
@@ -147,6 +149,8 @@ def google_authorize():
 
     login_user(user, remember=True)
     flash('Signed in with Google!', category='success')
+    if not user.onboarding_completed:
+        return redirect(url_for('views.profile', tour='1'))
     return redirect(url_for('views.home'))
 
 @auth.route('/sign-out')
@@ -181,7 +185,7 @@ def sign_up():
             db.session.commit()
             login_user(new_user, remember=True)
             flash("Account created!", category='success')
-            return redirect(url_for('views.home'))
+            return redirect(url_for('views.profile', tour='1'))
 
     return render_template("sign_up.html", user=current_user)
 
