@@ -35,8 +35,8 @@
         </div>
         <div class="text-center mb-3">
           {% if user.is_authenticated %}
-            {% if user.personal_info and user.personal_info.image_path %}
-              <img src="{{ url_for('static', filename='uploads/' ~ user.personal_info.image_path) }}" alt="Profile Image" class="profile-image">
+            {% if user.personal_info and (user.personal_info.image_data or user.personal_info.image_path) %}
+              <img src="{{ url_for('views.profile_image') }}" alt="Profile Image" class="profile-image">
             {% else %}
               <i class="fa-solid fa-user-circle user-icon"></i>
             {% endif %}

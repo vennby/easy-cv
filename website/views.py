@@ -144,13 +144,14 @@ def profile_image():
     if personal_info.image_data:
         return send_file(
             io.BytesIO(personal_info.image_data),
-            mimetype=personal_info.image_mime_type or 'application/octet-stream'
+            mimetype=personal_info.image_mime_type or 'application/octet-stream',
+            max_age=0
         )
 
     if personal_info.image_path:
         legacy_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', personal_info.image_path)
         if os.path.exists(legacy_path):
-            return send_file(legacy_path)
+            return send_file(legacy_path, max_age=0)
 
     abort(404)
 
