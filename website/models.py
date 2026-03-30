@@ -1,6 +1,9 @@
 from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.mysql import LONGTEXT
+
+LONG_DESCRIPTION_TEXT = db.Text().with_variant(LONGTEXT(), 'mysql').with_variant(LONGTEXT(), 'mariadb')
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,7 +69,7 @@ class Resume(db.Model):
 
 class Bios(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    bio = db.Column(db.Text)
+    bio = db.Column(LONG_DESCRIPTION_TEXT)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Educations(db.Model):
@@ -82,7 +85,7 @@ class Experiences(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.Text)
     comp = db.Column(db.Text)
-    desc = db.Column(db.Text)
+    desc = db.Column(LONG_DESCRIPTION_TEXT)
     start_date = db.Column(db.Text, nullable=False)
     end_date = db.Column(db.Text, nullable=True)
     ongoing = db.Column(db.Boolean, default=False)
@@ -92,7 +95,7 @@ class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     proj = db.Column(db.Text)
     tool = db.Column(db.Text)
-    desc = db.Column(db.Text)
+    desc = db.Column(LONG_DESCRIPTION_TEXT)
     link = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
