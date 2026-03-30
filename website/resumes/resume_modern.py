@@ -30,10 +30,13 @@ def _register_fonts():
         return "Times-Roman"
 
 
-def _circle_photo(path):
+def _circle_photo(image_source):
     try:
         from PIL import Image, ImageDraw
-        img  = Image.open(path).convert("RGBA")
+        if isinstance(image_source, (bytes, bytearray)):
+            img = Image.open(io.BytesIO(image_source)).convert("RGBA")
+        else:
+            img = Image.open(image_source).convert("RGBA")
         s    = min(img.size)
         img  = img.crop(((img.width - s) // 2, (img.height - s) // 2,
                           (img.width + s) // 2, (img.height + s) // 2))
@@ -224,9 +227,15 @@ def generate_modern_resume(resume):
     PHOTO_R  = 44
     PHOTO_CX = SB_W / 2
 
-    if pi and getattr(pi, "image_path", None):
-        img_path   = os.path.join(os.path.dirname(__file__), "..", "static", "uploads", pi.image_path)
-        circle_buf = _circle_photo(img_path)
+    circle_buf = None
+    if pi and getattr(pi, "image_data", None):
+        circle_buf = _circle_photo(pi.image_data)
+    elif pi and getattr(pi, "image_path", None):
+        img_path = os.path.join(os.path.dirname(__file__), "..", "static", "uploads", pi.image_path)
+        if os.path.exists(img_path):
+            circle_buf = _circle_photo(img_path)
+
+    if circle_buf:
         if circle_buf:
             PHOTO_CY = sb_y - PHOTO_R
             c.saveState()
@@ -241,8 +250,6 @@ def generate_modern_resume(resume):
             c.setLineWidth(2)
             c.circle(PHOTO_CX, PHOTO_CY, PHOTO_R + 1, fill=0, stroke=1)
             sb_y = PHOTO_CY - PHOTO_R - 8
-        else:
-            sb_y -= 10
     else:
         sb_y -= 10
 

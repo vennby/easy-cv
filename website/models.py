@@ -48,6 +48,8 @@ class PersonalInfo(db.Model):
     website = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
     image_path = db.Column(db.String(200), nullable=True)
+    image_data = db.Column(db.LargeBinary, nullable=True)
+    image_mime_type = db.Column(db.Text, nullable=True)
 
 class Resume(db.Model):
     id = db.Column(db.Integer, primary_key=True)

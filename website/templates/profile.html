@@ -94,9 +94,9 @@
         <label for="profile_image">Profile Picture</label>
         <div class="profile-upload-shell">
           <div class="profile-upload-preview-wrap">
-            {% if user.personal_info and user.personal_info.image_path %}
+            {% if user.personal_info and (user.personal_info.image_data or user.personal_info.image_path) %}
             <img
-              src="{{ url_for('static', filename='uploads/' ~ user.personal_info.image_path) }}"
+              src="{{ url_for('views.profile_image') }}"
               alt="Profile Image"
               class="profile-upload-preview"
             />

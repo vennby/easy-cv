@@ -97,20 +97,62 @@ def update_personal_info():
     personal_info.linkedin = linkedin
     personal_info.github = github
     personal_info.website = website
+
+    legacy_image_path = None
+    if personal_info.image_path and not personal_info.image_data:
+        legacy_image_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', personal_info.image_path)
+
     # Handle profile image upload
     if 'profile_image' in request.files:
         file = request.files['profile_image']
         if file and file.filename:
-            from werkzeug.utils import secure_filename
-            filename = secure_filename(file.filename)
-            upload_folder = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            file_path = os.path.join(upload_folder, filename)
-            file.save(file_path)
-            personal_info.image_path = filename
+            file_bytes = file.read()
+            if file_bytes:
+                personal_info.image_data = file_bytes
+                personal_info.image_mime_type = (file.mimetype or 'application/octet-stream')
+                personal_info.image_path = None
+
+    if personal_info.image_path and personal_info.image_data is None and legacy_image_path and os.path.exists(legacy_image_path):
+        try:
+            with open(legacy_image_path, 'rb') as legacy_file:
+                personal_info.image_data = legacy_file.read()
+            ext = os.path.splitext(personal_info.image_path or '')[1].lower()
+            mime_by_ext = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.webp': 'image/webp',
+                '.gif': 'image/gif',
+            }
+            personal_info.image_mime_type = mime_by_ext.get(ext, 'application/octet-stream')
+            personal_info.image_path = None
+        except OSError:
+            pass
+
     db.session.commit()
     flash('Personal information updated!', category='success')
     return redirect(url_for('views.profile'))
+
+
+@views.route('/profile-image', methods=['GET'])
+@login_required
+def profile_image():
+    personal_info = PersonalInfo.query.filter_by(user_id=current_user.id).first()
+    if not personal_info:
+        abort(404)
+
+    if personal_info.image_data:
+        return send_file(
+            io.BytesIO(personal_info.image_data),
+            mimetype=personal_info.image_mime_type or 'application/octet-stream'
+        )
+
+    if personal_info.image_path:
+        legacy_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', personal_info.image_path)
+        if os.path.exists(legacy_path):
+            return send_file(legacy_path)
+
+    abort(404)
 
 @views.route('/settings', methods=['GET'])
 @login_required

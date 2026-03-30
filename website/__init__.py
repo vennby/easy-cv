@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import datetime
 from sqlalchemy import text
+from sqlalchemy import inspect
 
 load_dotenv()
 
@@ -139,3 +140,27 @@ def migrate_schema(app):
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+        try:
+            inspector = inspect(db.engine)
+            columns = {column['name'] for column in inspector.get_columns('personal_info')}
+
+            if 'image_data' not in columns:
+                if dialect == 'postgresql':
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_data BYTEA'))
+                elif dialect in ('mysql', 'mariadb'):
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_data LONGBLOB'))
+                else:
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_data BLOB'))
+                db.session.commit()
+
+            if 'image_mime_type' not in columns:
+                if dialect == 'postgresql':
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_mime_type TEXT'))
+                elif dialect in ('mysql', 'mariadb'):
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_mime_type TEXT'))
+                else:
+                    db.session.execute(text('ALTER TABLE personal_info ADD COLUMN image_mime_type TEXT'))
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
