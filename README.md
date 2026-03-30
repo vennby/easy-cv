@@ -44,6 +44,9 @@ https://github.com/user-attachments/assets/ac038569-0c62-456c-9f9d-9d5801f996cf
     GOOGLE_CLIENT_ID="your_google_oauth_client_id"
     GOOGLE_CLIENT_SECRET="your_google_oauth_client_secret"
     GOOGLE_REDIRECT_URI="http://127.0.0.1:5000/google-authorize"
+
+    ### Optional but recommended for GitHub repo import (prevents low anonymous API rate limits in deployment)
+    GITHUB_API_TOKEN="your_github_personal_access_token"
     ```
 
     If you don't want Google login yet, you can leave the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` values empty.

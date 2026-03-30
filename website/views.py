@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for, send_file, abort
+from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for, send_file, abort, current_app
 from flask_login import login_required, current_user, logout_user
 from .models import *
 from . import db
@@ -351,7 +351,7 @@ def _github_api_error_response(response, default_message):
 
     if response.status_code == 403 and response.headers.get('X-RateLimit-Remaining') == '0':
         return jsonify({
-            'error': 'GitHub API rate limit reached. Please try again later.',
+            'error': 'GitHub API rate limit reached. Configure GITHUB_API_TOKEN on the server or try again later.',
             'error_code': 'rate_limited'
         }), 429
 
@@ -362,6 +362,17 @@ def _github_api_error_response(response, default_message):
         }), 403
 
     return jsonify({'error': default_message, 'error_code': 'github_api_error'}), 502
+
+
+def _github_request(url, params=None, timeout=10):
+    headers = {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'easy-cv-app'
+    }
+    token = (current_app.config.get('GITHUB_API_TOKEN') or os.environ.get('GITHUB_API_TOKEN') or '').strip()
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+    return requests.get(url, params=params, headers=headers, timeout=timeout)
 
 
 def _repo_fallback_payload(full_name, username):
@@ -389,10 +400,9 @@ def github_repos():
         }), 400
 
     try:
-        response = requests.get(
+        response = _github_request(
             f'https://api.github.com/users/{username}/repos',
             params={'sort': 'updated', 'per_page': 100},
-            timeout=10,
         )
         if response.status_code != 200:
             return _github_api_error_response(response, 'Could not fetch repositories from GitHub right now.')
@@ -449,7 +459,7 @@ def import_github_project():
     api_base = f'https://api.github.com/repos/{full_name}'
 
     try:
-        repo_response = requests.get(api_base, timeout=10)
+        repo_response = _github_request(api_base)
         if repo_response.status_code == 404:
             return jsonify({
                 'error': 'Repository not found on GitHub. It may be private, deleted, or misspelled.',
@@ -467,7 +477,7 @@ def import_github_project():
 
         repo_data = repo_response.json()
 
-        languages_response = requests.get(f'{api_base}/languages', timeout=10)
+        languages_response = _github_request(f'{api_base}/languages')
         languages_data = languages_response.json() if languages_response.status_code == 200 else {}
         languages = list(languages_data.keys())[:6]
 

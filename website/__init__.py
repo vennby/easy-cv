@@ -30,6 +30,7 @@ def create_app():
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
     app.config['GOOGLE_REDIRECT_URI'] = os.environ.get('GOOGLE_REDIRECT_URI')
+    app.config['GITHUB_API_TOKEN'] = os.environ.get('GITHUB_API_TOKEN')
     db.init_app(app)
     
     from .views import views
