@@ -71,6 +71,7 @@ def generate_classic_resume(resume):
                 words.pop(0)
             else:
                 ensure(LH)
+                c.setFont(font, size)
                 ox = x + (0 if first else hang)
                 c.drawString(ox, y, (prefix if first else "") + line)
                 y -= LH
@@ -78,6 +79,7 @@ def generate_classic_resume(resume):
                 line, first = "", False
         if line:
             ensure(LH)
+            c.setFont(font, size)
             ox = x + (0 if first else hang)
             c.drawString(ox, y, (prefix if first else "") + line)
             y -= LH
@@ -285,12 +287,14 @@ def generate_classic_resume(resume):
                     line = trial
                 else:
                     ensure(LH)
+                    c.setFont(BODY, 10.5)
                     c.drawString((L + label_w) if first else L, y, line)
                     y -= LH
                     c.setFont(BODY, 10.5)
                     first, line = False, word
             if line:
                 ensure(LH)
+                c.setFont(BODY, 10.5)
                 c.drawString((L + label_w) if first else L, y, line)
                 y -= LH
 
