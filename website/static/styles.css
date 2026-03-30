@@ -68,6 +68,34 @@ h6 {
 
 .sidebar .nav {
   gap: 0.25rem;
+  flex: 1;
+}
+
+.sidebar .nav-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-footer a {
+  color: #dbe4ff;
+  padding: 0.72rem 0.95rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  margin: 0.08rem 0;
+  font-size: 0.97rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar .nav-footer a:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  transform: translateX(2px);
 }
 
 .sidebar a {
