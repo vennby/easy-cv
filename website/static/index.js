@@ -322,6 +322,191 @@ handleProfileForm("experience-form", "experience");
 handleProfileForm("project-form", "project");
 handleProfileForm("skill-form", "skill");
 
+function setupGitHubProjectImport() {
+  const importBtn = document.getElementById("github_import_btn");
+  const repoInput = document.getElementById("github_repo_input");
+  const status = document.getElementById("github_import_status");
+  const repoDropdown = document.querySelector("[data-github-repo-dropdown]");
+  const repoMenu = document.querySelector("[data-github-repo-menu]");
+  const titleInput = document.getElementById("proj");
+  const toolInput = document.getElementById("tool");
+  const linkInput = document.getElementById("proj_link");
+  const descInput = document.getElementById("proj_desc");
+
+  if (
+    !importBtn ||
+    !repoInput ||
+    !status ||
+    !repoDropdown ||
+    !repoMenu ||
+    !titleInput ||
+    !toolInput ||
+    !linkInput ||
+    !descInput
+  ) {
+    return;
+  }
+
+  let repoOptions = [];
+  let selectedRepoFullName = "";
+
+  const setStatus = (message, className = "text-muted") => {
+    status.textContent = message;
+    status.className = className;
+  };
+
+  const closeRepoMenu = () => {
+    repoMenu.classList.remove("is-open");
+    repoMenu.innerHTML = "";
+  };
+
+  const buildLocalFallback = (repoValue) => {
+    const raw = String(repoValue || "").trim();
+    if (!raw) return null;
+
+    let fullName = raw;
+    if (!fullName.includes("/")) {
+      const knownOwner = repoOptions[0]?.full_name?.split("/")?.[0] || "github-user";
+      fullName = `${knownOwner}/${fullName}`;
+    }
+
+    const repoName = fullName.split("/").pop() || fullName;
+    return {
+      proj: repoName,
+      tool: "",
+      desc: "Could not auto-import details from GitHub. Please review and edit before saving.",
+      link: `https://github.com/${fullName}`,
+    };
+  };
+
+  const applyProjectValues = (payload) => {
+    titleInput.value = payload?.proj || "";
+    toolInput.value = payload?.tool || "";
+    linkInput.value = payload?.link || "";
+    descInput.value = payload?.desc || "";
+  };
+
+  const renderRepoMenu = (query) => {
+    const search = String(query || "").trim().toLowerCase();
+    const filtered = repoOptions.filter((repo) => {
+      const fullName = (repo.full_name || "").toLowerCase();
+      const name = (repo.name || "").toLowerCase();
+      return !search || fullName.includes(search) || name.includes(search);
+    });
+
+    if (!filtered.length) {
+      closeRepoMenu();
+      return;
+    }
+
+    repoMenu.innerHTML = filtered
+      .slice(0, 20)
+      .map(
+        (repo) =>
+          `<button type="button" class="skill-group-option" data-repo-full-name="${escapeHtml(repo.full_name)}" data-repo-name="${escapeHtml(repo.name)}">${escapeHtml(repo.full_name)}</button>`
+      )
+      .join("");
+    repoMenu.classList.add("is-open");
+  };
+
+  const loadRepos = () => {
+    if (repoOptions.length) return Promise.resolve();
+
+    setStatus("Loading repositories from your GitHub profile...");
+    return fetch("/github-repos")
+      .then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(payload.error || "Could not load repositories.");
+        }
+        repoOptions = Array.isArray(payload.repos) ? payload.repos : [];
+        if (!repoOptions.length) {
+          setStatus("No public repositories found for your GitHub account.", "text-muted");
+        } else {
+          setStatus(`Found ${repoOptions.length} repositories. Start typing to filter.`, "text-muted");
+        }
+      })
+      .catch((error) => {
+        const message = error?.message || "Could not load repositories.";
+        setStatus(`${message} You can still type a repo and import with fallback.`, "text-danger");
+      });
+  };
+
+  repoInput.addEventListener("focus", () => {
+    loadRepos().then(() => renderRepoMenu(repoInput.value));
+  });
+
+  repoInput.addEventListener("input", () => {
+    selectedRepoFullName = "";
+    renderRepoMenu(repoInput.value);
+  });
+
+  repoMenu.addEventListener("mousedown", (event) => {
+    const option = event.target.closest(".skill-group-option");
+    if (!option) return;
+    event.preventDefault();
+    selectedRepoFullName = option.dataset.repoFullName || "";
+    repoInput.value = option.dataset.repoName || selectedRepoFullName;
+    closeRepoMenu();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-github-repo-dropdown]")) {
+      closeRepoMenu();
+    }
+  });
+
+  importBtn.addEventListener("click", () => {
+    const typedValue = repoInput.value.trim();
+    const matchedRepo =
+      repoOptions.find((repo) => repo.name === typedValue || repo.full_name === typedValue) || null;
+    const repo = selectedRepoFullName || matchedRepo?.full_name || typedValue;
+
+    if (!repo) {
+      setStatus("Select a repository first.", "text-danger");
+      return;
+    }
+
+    importBtn.disabled = true;
+    setStatus("Importing from GitHub...");
+
+    fetch("/import-github-project", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repo }),
+    })
+      .then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw {
+            message: payload.error || "Could not import repository.",
+            fallback: payload.fallback || null,
+          };
+        }
+        return payload;
+      })
+      .then((payload) => {
+        applyProjectValues(payload);
+        setStatus("Repository imported. Review and click Add Project.", "text-success");
+      })
+      .catch((error) => {
+        const fallback = error?.fallback || buildLocalFallback(repo);
+        if (fallback) {
+          applyProjectValues(fallback);
+          setStatus(
+            `${error?.message || "Import failed."} Filled basic project details as fallback; review and save.`,
+            "text-warning"
+          );
+        } else {
+          setStatus(error?.message || "Import failed.", "text-danger");
+        }
+      })
+      .finally(() => {
+        importBtn.disabled = false;
+      });
+  });
+}
+
 // Dynamic resume search on homepage
 function setupResumeSearch() {
   const searchInput = document.querySelector(
@@ -702,6 +887,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupResumeSearch();
   setupResumeFormatDropdown();
   setupSkillGroupDropdowns();
+  setupGitHubProjectImport();
   setupCollapsibleSections();
   setupInlineEditButtons();
   setupResumeBuilder();

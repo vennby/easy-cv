@@ -6,6 +6,8 @@ from .resumes.resume_classic import generate_classic_resume
 from .resumes.resume_modern import generate_modern_resume
 import os, io, json
 import datetime
+import re
+import requests
 
 views = Blueprint('views', __name__)
 
@@ -319,6 +321,171 @@ def add_project(proj, tool, desc, link=None):
     db.session.commit()
     flash("Project added!", category='success')
     return redirect(url_for('views.profile'))
+
+
+def _extract_github_username(github_value):
+    github_value = (github_value or '').strip().rstrip('/')
+    if not github_value:
+        return None
+
+    match = re.search(r'github\.com/([^/?#]+)', github_value, flags=re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    cleaned = github_value.lstrip('@').strip()
+    if '/' in cleaned:
+        cleaned = cleaned.split('/')[0]
+    return cleaned or None
+
+
+def _current_user_github_username():
+    personal_info = PersonalInfo.query.filter_by(user_id=current_user.id).first()
+    if not personal_info:
+        return None
+    return _extract_github_username(personal_info.github)
+
+
+def _github_api_error_response(response, default_message):
+    if response.status_code == 404:
+        return jsonify({'error': 'GitHub resource was not found.', 'error_code': 'not_found'}), 404
+
+    if response.status_code == 403 and response.headers.get('X-RateLimit-Remaining') == '0':
+        return jsonify({
+            'error': 'GitHub API rate limit reached. Please try again later.',
+            'error_code': 'rate_limited'
+        }), 429
+
+    if response.status_code in (401, 403):
+        return jsonify({
+            'error': 'GitHub blocked this request (private repo or temporary access restriction).',
+            'error_code': 'access_denied'
+        }), 403
+
+    return jsonify({'error': default_message, 'error_code': 'github_api_error'}), 502
+
+
+def _repo_fallback_payload(full_name, username):
+    owner = username
+    repo_name = full_name
+    if '/' in full_name:
+        owner, repo_name = full_name.split('/', 1)
+    return {
+        'proj': repo_name,
+        'tool': '',
+        'desc': 'Could not auto-import details from GitHub. Please review and edit before saving.',
+        'link': f'https://github.com/{owner}/{repo_name}'
+    }
+
+
+@views.route('/github-repos', methods=['GET'])
+@login_required
+def github_repos():
+    username = _current_user_github_username()
+    if not username:
+        return jsonify({
+            'error': 'Add your GitHub profile in Personal Info first.',
+            'error_code': 'missing_github_profile',
+            'repos': []
+        }), 400
+
+    try:
+        response = requests.get(
+            f'https://api.github.com/users/{username}/repos',
+            params={'sort': 'updated', 'per_page': 100},
+            timeout=10,
+        )
+        if response.status_code != 200:
+            return _github_api_error_response(response, 'Could not fetch repositories from GitHub right now.')
+
+        repos = response.json()
+        repo_options = [
+            {
+                'name': repo.get('name') or '',
+                'full_name': repo.get('full_name') or '',
+                'html_url': repo.get('html_url') or '',
+            }
+            for repo in repos
+            if repo.get('name') and repo.get('full_name')
+        ]
+        return jsonify({'username': username, 'repos': repo_options})
+    except requests.RequestException:
+        return jsonify({
+            'error': 'GitHub API request failed. You can still type a repo name manually.',
+            'error_code': 'network_error',
+            'repos': []
+        }), 502
+
+
+@views.route('/import-github-project', methods=['POST'])
+@login_required
+def import_github_project():
+    data = request.get_json(silent=True) or {}
+    repo_input = (data.get('repo') or '').strip()
+
+    if not repo_input:
+        return jsonify({'error': 'Enter a repository name.'}), 400
+
+    username = _current_user_github_username()
+    if not username:
+        fallback_repo = repo_input if '/' in repo_input else f'{repo_input}'
+        return jsonify({
+            'error': 'Add your GitHub profile in Personal Info first.',
+            'error_code': 'missing_github_profile',
+            'fallback': _repo_fallback_payload(fallback_repo, 'github-user')
+        }), 400
+
+    if repo_input.startswith('http://') or repo_input.startswith('https://'):
+        match = re.search(r'github\.com/([^/]+)/([^/#?]+)', repo_input, flags=re.IGNORECASE)
+        if not match:
+            return jsonify({'error': 'Invalid GitHub repository value.'}), 400
+        owner = match.group(1)
+        repo = match.group(2)
+        full_name = f'{owner}/{repo.removesuffix(".git")}'
+    elif '/' in repo_input:
+        full_name = repo_input.removesuffix('.git')
+    else:
+        full_name = f'{username}/{repo_input.removesuffix(".git")}'
+
+    api_base = f'https://api.github.com/repos/{full_name}'
+
+    try:
+        repo_response = requests.get(api_base, timeout=10)
+        if repo_response.status_code == 404:
+            return jsonify({
+                'error': 'Repository not found on GitHub. It may be private, deleted, or misspelled.',
+                'error_code': 'repo_not_found',
+                'fallback': _repo_fallback_payload(full_name, username)
+            }), 404
+        if repo_response.status_code != 200:
+            payload, status_code = _github_api_error_response(
+                repo_response,
+                'Could not fetch repository details from GitHub right now.'
+            )
+            body = payload.get_json() or {}
+            body['fallback'] = _repo_fallback_payload(full_name, username)
+            return jsonify(body), status_code
+
+        repo_data = repo_response.json()
+
+        languages_response = requests.get(f'{api_base}/languages', timeout=10)
+        languages_data = languages_response.json() if languages_response.status_code == 200 else {}
+        languages = list(languages_data.keys())[:6]
+
+        description = (repo_data.get('description') or '').strip()
+        tool_text = ', '.join(languages) if languages else (repo_data.get('language') or 'GitHub')
+
+        return jsonify({
+            'proj': repo_data.get('name') or full_name.split('/')[-1],
+            'tool': tool_text,
+            'desc': description or f'GitHub repository by {username}.',
+            'link': repo_data.get('html_url') or f'https://github.com/{full_name}'
+        })
+    except requests.RequestException:
+        return jsonify({
+            'error': 'GitHub API request failed. Using manual fallback values instead.',
+            'error_code': 'network_error',
+            'fallback': _repo_fallback_payload(full_name, username)
+        }), 502
 
 def add_skill(skill_data=None):
     skill_data = skill_data or request.form.get('skill')

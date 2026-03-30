@@ -436,6 +436,31 @@
 
     <form method="POST" class="mt-4" id="project-form">
       <input type="hidden" name="form_type" value="project" />
+      <div class="row g-2 mb-3 align-items-end">
+        <div class="col-md-9">
+          <label for="github_repo_input">Import from your GitHub repos</label>
+          <div class="skill-group-dropdown" data-github-repo-dropdown>
+            <input
+              type="text"
+              id="github_repo_input"
+              class="form-control"
+              placeholder="Type to search your repositories"
+              autocomplete="off"
+              data-github-repo-input
+            />
+            <span class="dropdown-indicator" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+            <div class="skill-group-menu" data-github-repo-menu></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <button type="button" class="btn btn-outline-primary w-100" id="github_import_btn">
+            Import Repo
+          </button>
+        </div>
+        <div class="col-12">
+          <small id="github_import_status" class="text-muted"></small>
+        </div>
+      </div>
       <div class="row g-3">
         <div class="col-md-6">
           <label for="proj">Project Title</label>
